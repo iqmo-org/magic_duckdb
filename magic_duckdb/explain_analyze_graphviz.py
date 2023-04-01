@@ -13,7 +13,8 @@ except Exception:
 
 # Extra path is optional: you should have "dot" in your PATH. If not, you can set extra_path to the
 # fully qualified path to your dot executable.
-dot_path = "c:\\Program files\\graphviz\\bin\\dot.exe"
+dot_path = None
+# "c:\\Program files\\graphviz\\bin\\dot.exe"
 
 
 def draw_graphviz(plan_json: str):
@@ -32,7 +33,7 @@ def draw_graphviz(plan_json: str):
         "HASH_JOIN": "rectangle",
     }
 
-    if os.path.exists(dot_path):
+    if dot_path is not None and os.path.exists(dot_path):
         # graphviz.DOT_BINARY = pathlib.Path("c:\\Program files\\graphviz\\bin\\")
         # graphviz.backend.DOT_BINARY = pathlib.Path("c:\\Program files\\graphviz\\bin\\")
         graphviz.backend.dot_command.DOT_BINARY = pathlib.Path(dot_path)
