@@ -132,9 +132,4 @@ jupysql:
 
 > 7.29 ms ± 126 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 
-# TODOs
-
-- Replace the command parsing with CmdParser
-- Pretty print the Explain and Analyze outputs
-
 ## Copyright (c) 2023 Iqmo Corporation
