@@ -1,0 +1,43 @@
+default_language_version:
+  python: python3
+repos:
+  - repo: https://github.com/ambv/black
+    rev: 22.12.0
+    hooks:
+      - id: black
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.0.0
+    hooks:
+      - id: flake8
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.6.1
+    hooks:
+      - id: nbstripout
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.0.0-alpha.4
+    hooks:
+      - id: prettier
+        exclude: "packages/app/public/.*|packages/jupyter_app_base/dist/.*|packages/app/build/.*|pyrightconfig.json"
+        pass_filenames: true
+  - repo: "local"
+    hooks:
+      - entry: tsc --noEmit
+        id: "tsc"
+        name: "tsc"
+        language: node
+        pass_filenames: false
+        types_or: [ts, tsx]
+        args: []
+        require_serial: false
+        additional_dependencies: ["typescript@~4.1.3"]
+        minimum_pre_commit_version: "0"
+        exclude: "packages/app/public/.*|packages/app/build/.*"
+  - repo: local
+    hooks:
+      - entry: pyright
+        id: "pyright"
+        name: "pyright"
+        types_or: [python]
+        language: node
+        pass_filenames: true
+        additional_dependencies: ["pyright"]
