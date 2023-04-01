@@ -10,6 +10,22 @@ Simple Cell / Line Magic for DuckDB for Jupyter.
 %dql select * from range(100)
 ```
 
+## Usage:
+
+```
+Connection:
+-cn <connection_string>: Create a new connection to a DuckDB. Example: %dql -cn :memory:
+-co <connection_object>: Use an existing DuckDB Connection. Example: %dql -co con
+-d: Use the duckdb.default_connection
+--getcon: Get the current connection, regardless of how it was created
+
+Types:
+--listtypes: Returns a list of available output types. Pandas df is the default type.
+-t <type>: Selects the type for this and all future requests.
+```
+
+See examples.ipynb for better usage examples.
+
 # Motivation
 
 magic_duckdb was created to:
