@@ -1,10 +1,15 @@
-import graphviz  # type: ignore
-
 import os
 import pathlib
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 import json
+
+try:
+    import graphviz  # type: ignore
+
+    GRAPHVIZ_MODULE_AVAILABLE = True
+except Exception:
+    GRAPHVIZ_MODULE_AVAILABLE = False
 
 # Extra path is optional: you should have "dot" in your PATH. If not, you can set extra_path to the
 # fully qualified path to your dot executable.
@@ -12,6 +17,11 @@ dot_path = "c:\\Program files\\graphviz\\bin\\dot.exe"
 
 
 def draw_graphviz(plan_json: str):
+    if not GRAPHVIZ_MODULE_AVAILABLE:
+        print(
+            "Install graphviz before using. This requires two steps: Install the graphviz binaries and add the bin directory to your PATH, then pip install graphviz"
+        )
+        return None
 
     names_to_shapes = {
         "Query": "tripleoctagon",
