@@ -31,11 +31,13 @@ def _get_obj_from_name(name: str) -> Optional[object]:
         return ip.ev(name)
 
 
+connection: Optional[DuckDBPyConnection] = None
+
+
 @magics_class
 class DuckDbMagic(Magics, Configurable):
     # database connection object
     # created via -d (default), -cn (connection string) or -co (connection object)
-    connection: Optional[DuckDBPyConnection] = None
 
     # selected via -t. None = Pandas.
     export_function = None
@@ -57,6 +59,7 @@ class DuckDbMagic(Magics, Configurable):
     def execute(
         self, line: Optional[str] = None, cell: Optional[str] = None, local_ns=None
     ):
+        global connection
 
         # Handle arguments
         # TODO: Replace this with argparser or equivalent.
@@ -75,11 +78,11 @@ class DuckDbMagic(Magics, Configurable):
                 if cmd == "--listtypes":
                     return dbwrapper.export_functions
                 elif cmd == "--getcon":
-                    return self.connection
+                    return connection
 
                 # handle commands with no options
                 elif cmd == "-d":
-                    self.connection = dbwrapper.default_connection()
+                    connection = dbwrapper.default_connection()
                     line = everything_after_cmd
 
                 # handle commands with options
@@ -96,7 +99,7 @@ class DuckDbMagic(Magics, Configurable):
                     else:
                         if debug_msgs:
                             print(f"Using existing connection: {connection_object}")
-                    self.connection = con
+                    connection = con
                     line = everything_after_cmd_option
                 elif cmd == "-cn":
                     connection_string = cmd_option
@@ -116,31 +119,35 @@ class DuckDbMagic(Magics, Configurable):
                     line = everything_after_cmd_option
 
         # Done handling arguments, run the statement(s)... if there is one
-        if line is None and cell is not None and len(cell) > 0:
+        if (line is None or line == "") and cell is not None and len(cell) > 0:
             query = cell
         else:
             query = line
 
         if query is None or len(query) == 0:
+            # if debug_msgs:
+            #    print("Nothing to execute")
+
             return
 
-        if self.connection is None:
+        if connection is None:
             if debug_msgs:
                 print("Setting connection to default_connection()")
-            self.connection = dbwrapper.default_connection()
+            connection = dbwrapper.default_connection()
         try:
             return dbwrapper.execute(
                 query_string=query,
-                connection=self.connection,
+                connection=connection,
                 export_function=self.export_function,
             )
         except ConnectionException as e:
             print(
                 f"Unable to connect, connection may already be closed {e}. Setting connection to None"
             )
-            self.connection = None
+            connection = None
 
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
+
     ip.register_magics(DuckDbMagic)
