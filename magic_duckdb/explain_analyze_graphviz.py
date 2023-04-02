@@ -3,13 +3,9 @@ import pathlib
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 import json
+from magic_duckdb.logging_init import init_logging
 
-try:
-    import graphviz  # type: ignore
-
-    GRAPHVIZ_MODULE_AVAILABLE = True
-except Exception:
-    GRAPHVIZ_MODULE_AVAILABLE = False
+logger = init_logging()
 
 # Extra path is optional: you should have "dot" in your PATH. If not, you can set extra_path to the
 # fully qualified path to your dot executable.
@@ -18,10 +14,13 @@ dot_path = None
 
 
 def draw_graphviz(plan_json: str):
-    if not GRAPHVIZ_MODULE_AVAILABLE:
-        print(
-            "Install graphviz before using. This requires two steps: Install the graphviz binaries and add the bin directory to your PATH, then pip install graphviz"
-        )
+    try:
+        # Defer loading, since this is optional
+        import graphviz  # type: ignore # noqa
+
+        logger.debug("Graphviz Python module is available")
+    except Exception:
+        logger.debug("Graphviz Python module not available")
         return None
 
     names_to_shapes = {
@@ -34,11 +33,13 @@ def draw_graphviz(plan_json: str):
     }
 
     if dot_path is not None and os.path.exists(dot_path):
+        logger.debug(f"Using dot_path {dot_path}")
+
         # graphviz.DOT_BINARY = pathlib.Path("c:\\Program files\\graphviz\\bin\\")
         # graphviz.backend.DOT_BINARY = pathlib.Path("c:\\Program files\\graphviz\\bin\\")
-        graphviz.backend.dot_command.DOT_BINARY = pathlib.Path(dot_path)
+        graphviz.backend.dot_command.DOT_BINARY = pathlib.Path(dot_path)  # type: ignore # noqa
 
-    dot = graphviz.Digraph()
+    dot = graphviz.Digraph()  # type: ignore # noqa
 
     @dataclass
     class Node:

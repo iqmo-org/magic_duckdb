@@ -9,29 +9,28 @@ from IPython.core.magic import (
     no_var_expand,
     needs_local_scope,
 )
+
 from IPython.core.getipython import get_ipython
 from duckdb import ConnectionException, DuckDBPyConnection
-from magic_duckdb.duckdb_mode import DuckDbMode
 
+from magic_duckdb.duckdb_mode import DuckDbMode
+from magic_duckdb.autocompletion import init_completer
+from magic_duckdb.logging_init import init_logging
 from typing import Optional
+
+logger = init_logging(logfile=None)
 
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()
 
-# Disables extra print statements
-debug_msgs = True
+ENABLE_AUTOCOMPLETE = True
+
+connection: Optional[DuckDBPyConnection] = None
 
 
 def _get_obj_from_name(name: str) -> Optional[object]:
     ip = get_ipython()
-    if ip is None:
-        print("No ipython found")
-        return None
-    else:
-        return ip.ev(name)
-
-
-connection: Optional[DuckDBPyConnection] = None
+    return ip.ev(name) if ip is not None else None
 
 
 @magics_class
@@ -97,14 +96,12 @@ class DuckDbMagic(Magics, Configurable):
                     if con is None:
                         raise ValueError(f"Couldn't find {connection_object}")
                     else:
-                        if debug_msgs:
-                            print(f"Using existing connection: {connection_object}")
+                        logger.info(f"Using existing connection: {connection_object}")
                     connection = con
                     line = everything_after_cmd_option
                 elif cmd == "-cn":
                     connection_string = cmd_option
-                    if debug_msgs:
-                        print(f"Connecting to {connection_string}")
+                    logger.info(f"Connecting to {connection_string}")
                     con = dbwrapper.connect(connection_string)
                     line = everything_after_cmd_option
                 elif cmd == "-t":
@@ -118,21 +115,14 @@ class DuckDbMagic(Magics, Configurable):
 
                     line = everything_after_cmd_option
 
-        # Done handling arguments, run the statement(s)... if there is one
-        if (line is None or line == "") and cell is not None and len(cell) > 0:
-            query = cell
-        else:
-            query = line
+        query = cell if (cell is not None and len(cell) == 0) else line
 
         if query is None or len(query) == 0:
-            # if debug_msgs:
-            #    print("Nothing to execute")
-
+            logger.debug("Nothing to execute")
             return
 
         if connection is None:
-            if debug_msgs:
-                print("Setting connection to default_connection()")
+            logger.info("Setting connection to default_connection()")
             connection = dbwrapper.default_connection()
         try:
             return dbwrapper.execute(
@@ -141,7 +131,7 @@ class DuckDbMagic(Magics, Configurable):
                 export_function=self.export_function,
             )
         except ConnectionException as e:
-            print(
+            logger.exception(
                 f"Unable to connect, connection may already be closed {e}. Setting connection to None"
             )
             connection = None
@@ -149,5 +139,11 @@ class DuckDbMagic(Magics, Configurable):
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
+    ip = get_ipython()
+    if ip is None:
+        raise ValueError("No Ipython found")
+
+    if ENABLE_AUTOCOMPLETE:
+        init_completer(ipython=ip)
 
     ip.register_magics(DuckDbMagic)

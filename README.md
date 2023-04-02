@@ -43,12 +43,30 @@ The %sql magics are great, but are intended for breadth (supporting many types o
 
 The goal of this project was to provide a minimal line & cell magics for DuckDB in Jupyter notebooks with minimal dependencies and as simply as possible.
 
-The code is concentrated in two files, totalling around 200 lines of code:
+The code is concentrated in two files with under 300 lines of code. Goal is to keep this code short and simple.
 
 - magic.py: Barebones cell and line magic that parses arguments, and executes statements
 - duckdb_mode.py: execute() calls the appropriate method based on the user selected output type.
 
 There are also separate files for drawing explain analyze graphs and formatting (beautifying) SQL.
+
+# Autocompletion: Work in Progress
+
+There's a rough implementation of an autocompleter that can be enabled prior to loading the extension:
+
+```
+from magic_duckdb import magic
+magic.ENABLE_AUTOCOMPLETE
+%load_ext magic_duckdb
+```
+
+This is primarily a proof of concept at hooking up an ipython completer, but it is somewhat helpful as it provides:
+
+- Common phrases, such as various PRAGMAs and SQL phrases like CREATE OR REPLACE TABLE
+- Table names from the current duckdb connection
+- Column names: aren't working, the results are being overriden by something else (help is appreciated)
+
+TODO: This should reuse duckdb's SQL autocompletion work here [4921](https://github.com/duckdb/duckdb/pull/4921) and test cases here: [shell-test.py](https://github.com/Mytherin/duckdb/blob/5f75cb90b478434f0a1811af0695ea3a186a67a8/tools/shell/shell-test.py)
 
 ## Data Formats
 
@@ -148,4 +166,5 @@ jupysql:
 
 > 7.29 ms ± 126 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 
-## Copyright (c) 2023 Iqmo Corporation
+<br/>
+Copyright (c) 2023 Iqmo Corporation

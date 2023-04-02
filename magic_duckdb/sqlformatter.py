@@ -1,6 +1,8 @@
-from subprocess import Popen, PIPE, STDOUT
-
 import pathlib
+from subprocess import Popen, PIPE, STDOUT
+from magic_duckdb.logging_init import init_logging
+
+logger = init_logging()
 
 language_mode = "postgresql"
 indentStyle = "standard"
@@ -11,7 +13,7 @@ denseOperators = "true"
 
 
 def formatsql(query: str):
-
+    logger.debug(f"Formatting {query}")
     config = f'"keywordCase": "{keywordCase}", "indentStyle": "{indentStyle}", "linesBetweenQuerys": {linesBetweenQueries}, "logicalOperatorNewline": "{logicalOperatorNewline}", "denseOperators": "{denseOperators}"'
     config = "{" + config + "}"
 
