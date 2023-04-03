@@ -1,8 +1,8 @@
 import pathlib
 from subprocess import Popen, PIPE, STDOUT
-from magic_duckdb.logging_init import init_logging
+import logging
 
-logger = init_logging()
+logger = logging.getLogger("magic_duckdb")
 
 language_mode = "postgresql"
 indentStyle = "standard"

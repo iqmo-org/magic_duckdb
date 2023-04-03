@@ -15,10 +15,11 @@ from duckdb import ConnectionException, DuckDBPyConnection
 
 from magic_duckdb.duckdb_mode import DuckDbMode
 from magic_duckdb.autocompletion import init_completer
-from magic_duckdb.logging_init import init_logging
 from typing import Optional
+import logging
 
-logger = init_logging(logfile=None)
+logger = logging.getLogger("magic_duckdb")
+
 
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()

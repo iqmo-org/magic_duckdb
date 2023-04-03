@@ -52,21 +52,26 @@ There are also separate files for drawing explain analyze graphs and formatting 
 
 # Autocompletion: Work in Progress
 
-There's a rough implementation of an autocompleter that can be enabled prior to loading the extension:
+There's a rough implementation of an autocompleter that can be enabled prior to loading the extension.
+
+This is really a proof of concept at getting the plumbing to work. The actual autocompletion should probably leverage duckdb's existing work: [4921](https://github.com/duckdb/duckdb/pull/4921) and test cases here: [shell-test.py](https://github.com/Mytherin/duckdb/blob/5f75cb90b478434f0a1811af0695ea3a186a67a8/tools/shell/shell-test.py)
 
 ```
 from magic_duckdb import magic
-magic.ENABLE_AUTOCOMPLETE
+magic.ENABLE_AUTOCOMPLETE=True
 %load_ext magic_duckdb
 ```
 
-This is primarily a proof of concept at hooking up an ipython completer, but it is somewhat helpful as it provides:
+Completions:
 
-- Common phrases, such as various PRAGMAs and SQL phrases like CREATE OR REPLACE TABLE
+- Common phrases, such as PRAGMAs and SQL phrases like CREATE OR REPLACE TABLE
 - Table names from the current duckdb connection
-- Column names: aren't working, the results are being overriden by something else (help is appreciated)
+- <not yet> Column names: The code is mostly hooked up, but the results are being override in VScode. In Jupyter, it'll autocomplete after a space (tablename. <tab>)
 
-TODO: This should reuse duckdb's SQL autocompletion work here [4921](https://github.com/duckdb/duckdb/pull/4921) and test cases here: [shell-test.py](https://github.com/Mytherin/duckdb/blob/5f75cb90b478434f0a1811af0695ea3a186a67a8/tools/shell/shell-test.py)
+Limitations:
+
+- Line magics %dql only, not yet for %%dql cell magics
+- Case sensitive: it'll autocomplete CREA<tab>, but not CREA<tab>
 
 ## Data Formats
 

@@ -1,11 +1,17 @@
 import re
-from typing import List, Optional
+from typing import List
 from IPython.core.completer import IPCompleter
 
 from magic_duckdb import magic
-from magic_duckdb.logging_init import init_logging
+from IPython.core.completer import (
+    SimpleMatcherResult,
+    SimpleCompletion,
+    context_matcher,
+    CompletionContext,
+)
+import logging
 
-logger = init_logging()
+logger = logging.getLogger("magic_duckdb")
 
 
 def get_table_names() -> List[str]:
@@ -137,51 +143,81 @@ class DqlCustomCompleter(IPCompleter):
     all_phrases = sql_expects_tablename + sql_phrases + pragma_phrases
     lastword_pat = re.compile(r"(?si)(^|.*[\s])(\S+)\.")
     expects_table_pat = re.compile(r"(?si).*from")
+    empty_result = SimpleMatcherResult(completions=[], suppress=False)
 
-    def line_completer(self, event) -> Optional[List[str]]:
+    @context_matcher()  # forces v2 api
+    def line_completer(self, event: CompletionContext) -> SimpleMatcherResult:
         # if not %dql, returns nothing
         # if ends with a sql_expects_tablename phrase, then returns just table names
         # if ends in a period, checks to see if prefix is a tablename, and if so, returns column names
         # otherwise returns all sql phrases and tablenames
+        # https://github.com/ipython/ipython/blob/a418f38c4f96de1755701041fe5d8deffbf906db/IPython/core/completer.py#L563
 
         try:
-            command = event.command
-            text = event.text_until_cursor
-            # symbol = event.symbol
-            # line = event.line
-            line_after = text[4:].strip()
 
-            if command != "%dql":
-                # Should never occur
-                logger.info(f"Unexpected command {command}")
-                return None
+            logger.info(f"{type(event)}")
+
+            if hasattr(event, "full_text"):
+                text = event.full_text
+            else:
+                logger.info("No full_text, nothing to do")
+                return self.empty_result
+
+            if not text.startswith("%dql") and not text.startswith("%%dql"):
+                return self.empty_result
+
+            # if hasattr(event, "command"):
+            #    command = event.command
+            # else:
+            #    logger.info(f"{event}")
+            #    #command = None
+
+            if hasattr(event, "token"):
+                token = event.token
+            else:
+                logger.info(f"{event}")
+                token = ""
+
+            line_after = text[4:].strip()
 
             logger.debug(f"{event}, {type(event)}")
 
-            if line_after[-1] == ".":
-
+            if token is not None and token.endswith("."):
                 # VScode is ignoring or suppressing completions after a period.
                 # get the word preceding the period
-                m = self.lastword_pat.match(line_after)
-                if m is not None:
-                    tablename = m.group(2)
-                    columns = get_column_names(tablename)
-                    return columns
+                tablename = token[:-1]
 
-                else:
-                    # logger.debug("Matching failure: {line_after}")
-                    return []
+                columns = get_column_names(tablename)
+                logger.debug(f"Using columns {columns}")
+                completions = [SimpleCompletion(text=t, type="duckdb") for t in columns]
 
+                # It took way too many hours to figure out that matched_fragment="" was needed here
+                # Otherwise the results get suppressed
+                r = SimpleMatcherResult(
+                    completions=completions,
+                    suppress=True,
+                    matched_fragment="",
+                    ordered=True,
+                )
+                return r
             # if the last phrase should be followed by a table name, return the list of tables
             elif self.expects_table_pat.match(line_after) is not None:
                 # logger.debug("Expects table name")
-                return get_table_names()
+                names = get_table_names()
+                completions = [SimpleCompletion(text=t, type="duckdb") for t in names]
+                r = SimpleMatcherResult(completions=completions, suppress=True)
+                return r
 
             # default: return all phrases and tablenames
-            return self.all_phrases + get_table_names()
+            allp = self.all_phrases + get_table_names()
+
+            completions = [SimpleCompletion(text=t, type="duckdb") for t in allp]
+            r = SimpleMatcherResult(completions=completions, suppress=True)
+            return r
+
         except Exception:
             logger.exception(f"Error completing {event}")
-            return []
+            return SimpleMatcherResult(completions=[], suppress=False)
 
 
 def init_completer(ipython):
@@ -189,23 +225,36 @@ def init_completer(ipython):
     dql_completer = DqlCustomCompleter(shell=ipython, greedy=True, attr_matches=True)
 
     # Development notes:
+    # This took a while to figure out, partially because of the multiple APIs and signatures involved.
+    # Read the links below to better understand how this all really works.
+    #
     # add_s or add_re calls with two parameters:
     # callable(self, event)
     # The event contains: 2023-04-02 07:14:42,857 - magic_duckdb - INFO - namespace(line='%dql asda', symbol='asda', command='%dql', text_until_cursor='%dql asda')
-
+    #
     # set_custom_completer was an alternative method of adding, which seemed inconsistent within VScode... but it passed three parameters:
     # self, ipcompleter, linebuffer, cursor_pos
     #
     # the third method was add_hook('custom_complete'...)
     # which is a synonym for add_s or add_re
+    #
+    # https://github.com/ipython/ipython/pull/13745
     # https://ipython.readthedocs.io/en/stable/api/generated/IPython.core.completer.html
     # https://raw.githubusercontent.com/ipython/ipython/main/IPython/core/completer.py
     # https://ipython.org/ipython-doc/rel-0.12.1/api/generated/IPython.utils.strdispatch.html#IPython.utils.strdispatch.StrDispatch.s_matches
     # https://github.com/ipython/ipython/blob/9663a9adc4c87490f1dc59c8b6f32cdfd0c5094a/IPython/core/tests/test_completer.py
+    #
+    # Also, annoyingly, VScode inserts some completions in: https://stackoverflow.com/questions/72824819/vscode-autocomplete-intellisense-in-jupyter-notebook-when-starting-string-lit
 
-    ipython.Completer.custom_completers.add_s(
-        "%dql", dql_completer.line_completer, priority=0
-    )
+    # ipython.Completer.custom_completers.add_s(
+    #    "%dql", dql_completer.line_completer, priority=-1
+    # )
+
     # ipython.Completer.suppress_competing_matchers = True
     # ip.Completer.custom_completers.add_re(r'(?si).*dql.*', dql_completer.complete)
     # ip.set_custom_completer(dql_completer.complete, 0)
+
+    ipython.Completer.custom_matchers.insert(0, dql_completer.line_completer)
+    ipython.use_jedi = False
+
+    # ipython.Completer.suppress_competing_matchers = True

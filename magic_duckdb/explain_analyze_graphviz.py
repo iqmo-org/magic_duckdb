@@ -3,9 +3,9 @@ import pathlib
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 import json
-from magic_duckdb.logging_init import init_logging
+import logging
 
-logger = init_logging()
+logger = logging.getLogger("magic_duckdb")
 
 # Extra path is optional: you should have "dot" in your PATH. If not, you can set extra_path to the
 # fully qualified path to your dot executable.
