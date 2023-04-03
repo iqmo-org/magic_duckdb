@@ -10,6 +10,23 @@ openai_key = None
 print_prompts = False
 
 
+def get_columns(connection) -> str:
+    df = connection.sql("select * from duckdb_columns").df()
+
+    col_desc = []
+    for t in df["table_name"].unique():
+        cols = [
+            f"{v[0]} (type = {v[1]})"
+            for v in df.loc[df["table_name"] == t, ["column_name", "data_type"]].values
+        ]
+        cols_desc = ",".join(cols)
+
+        desc = f"Table {t} has the following columns and data types - {cols_desc}"
+        col_desc.append(desc)
+
+    return "\n".join(col_desc)
+
+
 @functools.lru_cache(32)
 def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     if connection is None:
@@ -20,13 +37,9 @@ def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]
     if len(tables) == 0:
         tables = None
     else:
-        tables = tables["name"].values
+        tables = ", ".join(tables["name"].values)
 
-    cols = connection.sql("select * from duckdb_columns").df()
-    if len(cols) == 0:
-        cols = None
-    else:
-        cols = cols.to_csv()
+    cols = get_columns(connection)
 
     constraints = connection.sql("select * from duckdb_constraints").df()
 
@@ -56,14 +69,19 @@ def fix_statement(connection, prompt: str, statement: str, chat: bool = False):
     # Prepare prompt
     tables, cols, constraints = get_schema(connection)
 
-    prompt = f"{prompt} my SQL\nMy query is: {statement}\nDuckdb is similar to postgresql. My database has the following tables: {tables}\nAnd column metadata: \n {cols}\n\nMy database has the following constraints: {constraints}"
+    prompt = (
+        f"{prompt} my SQL\nMy query is: {statement}\nDuckdb is similar to postgresql."
+    )
+    context = f"My database schema has the following tables: {tables}\nColumns: \n {cols}\n\nConstraints: {constraints}"
 
+    full_prompt = context + "\nMy question is: " + prompt
     logger.debug(f"Num tokens: {len(prompt.split(' '))}")
 
-    logger.info(f"Prompt = \n{prompt}")
+    logger.info(f"Prompt = \n{full_prompt}")
     if print_prompts:
         print("-------------Prompt---------------")
-        print(prompt)
+        print(full_prompt)
+
     if openai_key is None:
         raise ValueError(
             "Set the AI_KEY before using. \nfrom magic_duckdb.extras import sql_ai\nsql_ai.openai_key=yourkey"
@@ -77,7 +95,7 @@ def fix_statement(connection, prompt: str, statement: str, chat: bool = False):
             messages=[
                 {
                     "role": "user",
-                    "content": prompt,
+                    "content": full_prompt,
                 }
             ],
             max_tokens=193,
@@ -88,7 +106,7 @@ def fix_statement(connection, prompt: str, statement: str, chat: bool = False):
     else:
         response = openai.Completion.create(
             engine="text-davinci-002",
-            prompt=prompt,
+            prompt=full_prompt,
             max_tokens=100,
             n=1,
             stop=None,
