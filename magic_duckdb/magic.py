@@ -24,7 +24,7 @@ logger = logging.getLogger("magic_duckdb")
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()
 
-ENABLE_AUTOCOMPLETE = True
+ENABLE_AUTOCOMPLETE = False
 
 connection: Optional[DuckDBPyConnection] = None
 
