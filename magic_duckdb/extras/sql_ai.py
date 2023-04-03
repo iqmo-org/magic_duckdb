@@ -7,6 +7,7 @@ import textwrap
 logger = logging.getLogger("magic_duckdb")
 
 openai_key = None
+print_prompts = False
 
 
 @functools.lru_cache(32)
@@ -25,7 +26,7 @@ def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]
     if len(cols) == 0:
         cols = None
     else:
-        cols = cols[["table_name", "column_name"]].values
+        cols = cols.to_csv()
 
     constraints = connection.sql("select * from duckdb_constraints").df()
 
@@ -37,33 +38,32 @@ def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]
     return tables, cols, constraints
 
 
-def call_ai(connection, cmd, option, rest_of_line, cell):
+def call_ai(connection, cmd, prompt, query):
     if cmd == "-aichat":
         chat = True
     else:
         chat = False
 
-    if rest_of_line is None:
-        query = cell
-    elif cell is None:
-        query = rest_of_line
-    else:
-        query = rest_of_line + cell
-
-    return fix_statement(connection, option, query, chat)
+    query
+    return fix_statement(
+        connection=connection, prompt=prompt, statement=query, chat=chat
+    )
 
 
-def fix_statement(connection, command: str, statement: str, chat: bool = False):
+def fix_statement(connection, prompt: str, statement: str, chat: bool = False):
 
-    logger.info(f"Passing {command} statement to AI (chat={chat}): {statement}")
+    logger.info(f"Passing {prompt} statement to AI (chat={chat}): {statement}")
     # Prepare prompt
     tables, cols, constraints = get_schema(connection)
 
-    prompt = f"{command} the following SQL statement {statement} for duckdb. Duckdb is similar to postgresql. My database has the following tables: {tables}\nAnd column metadata: \n {cols}\n\nMy database has the following constraints: {constraints}"
+    prompt = f"{prompt} my SQL\nMy query is: {statement}\nDuckdb is similar to postgresql. My database has the following tables: {tables}\nAnd column metadata: \n {cols}\n\nMy database has the following constraints: {constraints}"
 
-    logger.debug(prompt)
     logger.debug(f"Num tokens: {len(prompt.split(' '))}")
 
+    logger.info(f"Prompt = \n{prompt}")
+    if print_prompts:
+        print("-------------Prompt---------------")
+        print(prompt)
     if openai_key is None:
         raise ValueError(
             "Set the AI_KEY before using. \nfrom magic_duckdb.extras import sql_ai\nsql_ai.openai_key=yourkey"
@@ -77,7 +77,7 @@ def fix_statement(connection, command: str, statement: str, chat: bool = False):
             messages=[
                 {
                     "role": "user",
-                    "content": f"I'm using duckdb, which is a relational database like PostGRESQL. My database has the following tables: {tables}. The tables have the following columns: \n {cols}\n. {command}: {statement}",
+                    "content": prompt,
                 }
             ],
             max_tokens=193,
@@ -101,5 +101,6 @@ def fix_statement(connection, command: str, statement: str, chat: bool = False):
     # Insert 4 spaces of indentation before each line
     cell = textwrap.indent(cell, " " * 4)
 
+    print("-------------OpenAI Response---------------")
     print(cell)
     return cell

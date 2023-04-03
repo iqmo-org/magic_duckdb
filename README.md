@@ -50,7 +50,7 @@ The code is concentrated in two files with under 300 lines of code. Goal is to k
 
 There are also separate files for drawing explain analyze graphs and formatting (beautifying) SQL.
 
-## Fun Stuff
+## Fun Stuff / Extras
 
 - SQL Formatter: Using the javascript sql-formatter project. Requires node/npx.
 - Graphical Explain Analyze: Formats complex explain analyze results using Graphviz. Requires both graphviz python module and graphviz binaries in your PATH.

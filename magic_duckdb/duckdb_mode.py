@@ -3,7 +3,6 @@ import duckdb
 from typing import Optional, List
 
 from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
-from magic_duckdb.extras.sqlformatter import formatsql
 
 
 class DuckDbMode:
@@ -66,9 +65,6 @@ class DuckDbMode:
 
         if export_function is None:
             export_function = self.export_functions[0]
-
-        if export_function == "format":
-            return formatsql(query_string)
 
         if export_function.startswith("analyze"):
             export_function = "explain_analyze_draw"

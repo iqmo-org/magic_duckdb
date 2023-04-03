@@ -68,10 +68,22 @@ class DuckDbMagic(Magics, Configurable):
                 everything_after_cmd_option = (
                     m.group(5) if len(m.groups()) >= 5 else None
                 )
-                if cmd == "--listtypes":
+                if cmd == "--listtypes" or cmd == "-listtypes" or cmd == "-l":
                     return dbwrapper.export_functions
-                elif cmd == "--getcon":
+                elif cmd == "--getcon" or cmd == "-getcon" or cmd == "-g":
                     return connection
+                elif cmd == "--format" or cmd == "-f" or cmd == "-format":
+                    try:
+                        from magic_duckdb.extras.sqlformatter import formatsql
+
+                        return formatsql(
+                            everything_after_cmd
+                            if cell is None or len(cell) == 0
+                            else cell
+                        )
+                    except Exception as e:
+                        logger.exception("Error processing")
+                        raise e
                 elif cmd == "-d":
                     connection = dbwrapper.default_connection()
                     line = everything_after_cmd
@@ -79,15 +91,20 @@ class DuckDbMagic(Magics, Configurable):
                     try:
                         from magic_duckdb.extras import sql_ai
 
-                        return sql_ai.call_ai(
+                        sql_ai.call_ai(
                             connection,
                             cmd,
-                            cmd_option,
-                            everything_after_cmd_option,
-                            cell,
+                            cmd_option
+                            if cell is None or len(cell) == 0
+                            else everything_after_cmd,  # if this is a cell magic, the first line is the entire prompt, otherwise just the first word
+                            cell
+                            if cell is not None and len(cell) > 0
+                            else everything_after_cmd_option,
                         )
-                    except Exception:
+                        return None  # suppress for now, need to figure out formatting
+                    except Exception as e:
                         logger.exception("Error with AI")
+                        raise e
                 elif cmd == "-co":
                     connection_object = cmd_option
                     con: DuckDBPyConnection = _get_obj_from_name(connection_object)  # type: ignore
