@@ -1,5 +1,5 @@
 import re
-from typing import List
+from typing import List, Optional
 from IPython.core.completer import IPCompleter
 
 from magic_duckdb import magic
@@ -144,7 +144,9 @@ class DqlCustomCompleter(IPCompleter):
     lastword_pat = re.compile(r"(?si)(^|.*[\s])(\S+)\.")
     expects_table_pat = re.compile(r"(?si).*from")
 
-    def convert_to_return(self, completions: List[str]):
+    def convert_to_return(
+        self, completions: List[str], matched_fragment: Optional[str] = None
+    ):
 
         completions = [SimpleCompletion(text=t, type="duckdb") for t in completions]
 
@@ -153,7 +155,7 @@ class DqlCustomCompleter(IPCompleter):
         r = SimpleMatcherResult(
             completions=completions,
             suppress=True,
-            matched_fragment="",
+            matched_fragment=matched_fragment,
             ordered=True,
         )
         return r
@@ -202,7 +204,7 @@ class DqlCustomCompleter(IPCompleter):
 
                 columns = get_column_names(tablename)
                 logger.debug(f"Using columns {columns}")
-                return self.convert_to_return(columns)
+                return self.convert_to_return(columns, matched_fragment="")
 
             # if the last phrase should be followed by a table name, return the list of tables
             elif self.expects_table_pat.match(line_after) is not None:

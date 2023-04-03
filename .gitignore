@@ -134,3 +134,6 @@ dmypy.json
 *.json
 *.gv
 *.gv.*
+
+/private
+keys.ini

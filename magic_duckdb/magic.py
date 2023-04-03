@@ -68,7 +68,6 @@ class DuckDbMagic(Magics, Configurable):
                 everything_after_cmd_option = (
                     m.group(5) if len(m.groups()) >= 5 else None
                 )
-
                 if cmd == "--listtypes":
                     return dbwrapper.export_functions
                 elif cmd == "--getcon":
@@ -76,6 +75,19 @@ class DuckDbMagic(Magics, Configurable):
                 elif cmd == "-d":
                     connection = dbwrapper.default_connection()
                     line = everything_after_cmd
+                elif cmd == "-ai" or cmd == "-aichat":
+                    try:
+                        from magic_duckdb.extras import sql_ai
+
+                        return sql_ai.call_ai(
+                            connection,
+                            cmd,
+                            cmd_option,
+                            everything_after_cmd_option,
+                            cell,
+                        )
+                    except Exception:
+                        logger.exception("Error with AI")
                 elif cmd == "-co":
                     connection_object = cmd_option
                     con: DuckDBPyConnection = _get_obj_from_name(connection_object)  # type: ignore

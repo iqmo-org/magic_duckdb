@@ -50,6 +50,12 @@ The code is concentrated in two files with under 300 lines of code. Goal is to k
 
 There are also separate files for drawing explain analyze graphs and formatting (beautifying) SQL.
 
+## Fun Stuff
+
+- SQL Formatter: Using the javascript sql-formatter project. Requires node/npx.
+- Graphical Explain Analyze: Formats complex explain analyze results using Graphviz. Requires both graphviz python module and graphviz binaries in your PATH.
+- AI Suggestions and Fixing: -ai and -aichat route the requests to OpenAI. Requires an OpenAI developer key.
+
 ## Data Formats
 
 The following formats are supported:
