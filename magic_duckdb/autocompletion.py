@@ -143,7 +143,20 @@ class DqlCustomCompleter(IPCompleter):
     all_phrases = sql_expects_tablename + sql_phrases + pragma_phrases
     lastword_pat = re.compile(r"(?si)(^|.*[\s])(\S+)\.")
     expects_table_pat = re.compile(r"(?si).*from")
-    empty_result = SimpleMatcherResult(completions=[], suppress=False)
+
+    def convert_to_return(self, completions: List[str]):
+
+        completions = [SimpleCompletion(text=t, type="duckdb") for t in completions]
+
+        # It took way too many hours to figure out that matched_fragment="" was needed here
+        # Otherwise the results get suppressed
+        r = SimpleMatcherResult(
+            completions=completions,
+            suppress=True,
+            matched_fragment="",
+            ordered=True,
+        )
+        return r
 
     @context_matcher()  # forces v2 api
     def line_completer(self, event: CompletionContext) -> SimpleMatcherResult:
@@ -161,10 +174,10 @@ class DqlCustomCompleter(IPCompleter):
                 text = event.full_text
             else:
                 logger.info("No full_text, nothing to do")
-                return self.empty_result
+                return self.convert_to_return([])
 
             if not text.startswith("%dql") and not text.startswith("%%dql"):
-                return self.empty_result
+                return self.convert_to_return([])
 
             # if hasattr(event, "command"):
             #    command = event.command
@@ -189,35 +202,21 @@ class DqlCustomCompleter(IPCompleter):
 
                 columns = get_column_names(tablename)
                 logger.debug(f"Using columns {columns}")
-                completions = [SimpleCompletion(text=t, type="duckdb") for t in columns]
+                return self.convert_to_return(columns)
 
-                # It took way too many hours to figure out that matched_fragment="" was needed here
-                # Otherwise the results get suppressed
-                r = SimpleMatcherResult(
-                    completions=completions,
-                    suppress=True,
-                    matched_fragment="",
-                    ordered=True,
-                )
-                return r
             # if the last phrase should be followed by a table name, return the list of tables
             elif self.expects_table_pat.match(line_after) is not None:
                 # logger.debug("Expects table name")
                 names = get_table_names()
-                completions = [SimpleCompletion(text=t, type="duckdb") for t in names]
-                r = SimpleMatcherResult(completions=completions, suppress=True)
-                return r
+                return self.convert_to_return(names)
 
             # default: return all phrases and tablenames
             allp = self.all_phrases + get_table_names()
-
-            completions = [SimpleCompletion(text=t, type="duckdb") for t in allp]
-            r = SimpleMatcherResult(completions=completions, suppress=True)
-            return r
+            return self.convert_to_return(allp)
 
         except Exception:
             logger.exception(f"Error completing {event}")
-            return SimpleMatcherResult(completions=[], suppress=False)
+            return self.convert_to_return([])
 
 
 def init_completer(ipython):

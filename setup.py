@@ -9,11 +9,11 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="magic_duckdb",
-    version="0.1.4",
-    description="Jupyter Magics for DuckDB",
+    version="0.1.5",
+    description="Jupyter Cell and Line Magics for DuckDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://www.iqmo.com",
+    url="https://github.com/iqmo-org/magic_duckdb",
     author="iqmo",
     author_email="info@iqmo.com",
     classifiers=[],
