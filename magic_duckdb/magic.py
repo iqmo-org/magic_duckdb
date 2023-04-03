@@ -9,17 +9,13 @@ from IPython.core.magic import (
     no_var_expand,
     needs_local_scope,
 )
-
 from IPython.core.getipython import get_ipython
 from duckdb import ConnectionException, DuckDBPyConnection
-
 from magic_duckdb.duckdb_mode import DuckDbMode
-from magic_duckdb.autocompletion import init_completer
 from typing import Optional
 import logging
 
 logger = logging.getLogger("magic_duckdb")
-
 
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()
@@ -61,10 +57,9 @@ class DuckDbMagic(Magics, Configurable):
     ):
         global connection
 
-        # Handle arguments
-        # TODO: Replace this with argparser or equivalent.
+        # Handle arguments via a regexp. Run any statement after the argument and/or option.
+        # TODO: Replace with argparser or cmdparser or equivalent.
         if line is not None:
-            # If arguments (-something) passed, then handle them
             m = self.pattern.match(line)
             if m is not None:  # a command was found
                 cmd = m.group(1)
@@ -74,18 +69,13 @@ class DuckDbMagic(Magics, Configurable):
                     m.group(5) if len(m.groups()) >= 5 else None
                 )
 
-                # handle explicits
                 if cmd == "--listtypes":
                     return dbwrapper.export_functions
                 elif cmd == "--getcon":
                     return connection
-
-                # handle commands with no options
                 elif cmd == "-d":
                     connection = dbwrapper.default_connection()
                     line = everything_after_cmd
-
-                # handle commands with options
                 elif cmd == "-co":
                     connection_object = cmd_option
                     con: DuckDBPyConnection = _get_obj_from_name(connection_object)  # type: ignore
@@ -93,7 +83,6 @@ class DuckDbMagic(Magics, Configurable):
                         raise ValueError(
                             f"{connection_object} is not a DuckDBPyConnection"
                         )
-
                     if con is None:
                         raise ValueError(f"Couldn't find {connection_object}")
                     else:
@@ -113,10 +102,10 @@ class DuckDbMagic(Magics, Configurable):
                         raise ValueError(
                             f"{export_function} not found in {dbwrapper.export_functions}"
                         )
-
                     line = everything_after_cmd_option
 
-        query = cell if (cell is not None and len(cell) == 0) else line
+        # Arguments done, now run the query (either the remainder of the line, or the cell if a cell magic)
+        query = cell if (cell is not None and len(cell) > 0) else line
 
         if query is None or len(query) == 0:
             logger.debug("Nothing to execute")
@@ -125,12 +114,14 @@ class DuckDbMagic(Magics, Configurable):
         if connection is None:
             logger.info("Setting connection to default_connection()")
             connection = dbwrapper.default_connection()
+
         try:
-            return dbwrapper.execute(
+            o = dbwrapper.execute(
                 query_string=query,
                 connection=connection,
                 export_function=self.export_function,
             )
+            return o
         except ConnectionException as e:
             logger.exception(
                 f"Unable to connect, connection may already be closed {e}. Setting connection to None"
@@ -145,6 +136,13 @@ def load_ipython_extension(ip):
         raise ValueError("No Ipython found")
 
     if ENABLE_AUTOCOMPLETE:
-        init_completer(ipython=ip)
+        try:
+            from magic_duckdb.extras.autocompletion import init_completer
+
+            init_completer(ipython=ip)
+        except Exception:
+            logger.exception(
+                "Unable to initialize autocompletion. iPython 8.x is required."
+            )
 
     ip.register_magics(DuckDbMagic)

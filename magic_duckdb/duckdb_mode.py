@@ -2,8 +2,8 @@ import duckdb
 
 from typing import Optional, List
 
-from magic_duckdb.explain_analyze_graphviz import draw_graphviz
-from magic_duckdb.sqlformatter import formatsql
+from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
+from magic_duckdb.extras.sqlformatter import formatsql
 
 
 class DuckDbMode:
