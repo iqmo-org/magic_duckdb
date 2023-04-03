@@ -1,12 +1,11 @@
 import openai  # type: ignore
 import logging
-import functools
 from typing import Tuple, Optional
 import textwrap
 
 logger = logging.getLogger("magic_duckdb")
 
-openai_key = None
+OPENAI_KEY = None
 print_prompts = False
 
 
@@ -27,7 +26,6 @@ def get_columns(connection) -> str:
     return "\n".join(col_desc)
 
 
-@functools.lru_cache(32)
 def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]:
     if connection is None:
         return None, None, None
@@ -69,9 +67,7 @@ def fix_statement(connection, prompt: str, statement: str, chat: bool = False):
     # Prepare prompt
     tables, cols, constraints = get_schema(connection)
 
-    prompt = (
-        f"{prompt} my SQL\nMy query is: {statement}\nDuckdb is similar to postgresql."
-    )
+    prompt = f"{prompt} my SQL\nMy query is: {statement}\nMy database is DuckDB. DuckDB's SQL is similar to postgresql."
     context = f"My database schema has the following tables: {tables}\nColumns: \n {cols}\n\nConstraints: {constraints}"
 
     full_prompt = context + "\nMy question is: " + prompt
@@ -82,12 +78,12 @@ def fix_statement(connection, prompt: str, statement: str, chat: bool = False):
         print("-------------Prompt---------------")
         print(full_prompt)
 
-    if openai_key is None:
+    if OPENAI_KEY is None:
         raise ValueError(
-            "Set the AI_KEY before using. \nfrom magic_duckdb.extras import sql_ai\nsql_ai.openai_key=yourkey"
+            "Set the OPENAI_KEY before using. \nfrom magic_duckdb.extras import sql_ai\nsql_ai.OPENAI_KEY=yourkey"
         )
     else:
-        openai.api_key = openai_key
+        openai.api_key = OPENAI_KEY
 
     if chat:
         response = openai.ChatCompletion.create(
