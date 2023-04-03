@@ -2,7 +2,7 @@ import duckdb
 from pandas import DataFrame
 import numpy as np
 from magic_duckdb import magic
-from magic_duckdb.autocompletion import DqlCustomCompleter
+from magic_duckdb.extras.autocompletion import DqlCustomCompleter
 from types import SimpleNamespace
 
 
@@ -31,8 +31,8 @@ def simple_autocomplete_tests():
         results = completer.line_completer(event)
         # display(results)
         assert results is not None
-        assert some_tablename in results
-        assert "SELECT" in results
+        assert some_tablename in [r.text for r in results["completions"]]
+        assert "SELECT" in [r.text for r in results["completions"]]
 
         event = SimpleNamespace(
             line="%dql s",
@@ -42,8 +42,8 @@ def simple_autocomplete_tests():
         )
         results = completer.line_completer(event)
         assert results is not None
-        assert some_tablename in results
-        assert "SELECT" not in results
+        assert some_tablename in [r.text for r in results["completions"]]
+        assert "SELECT" not in [r.text for r in results["completions"]]
 
         # Tablename doesn't exist
         event = SimpleNamespace(
@@ -64,7 +64,7 @@ def simple_autocomplete_tests():
         )
         results = completer.line_completer(event)
         assert results is not None
-        assert "19" in results
+        assert "19" in [r.text for r in results["completions"]]
 
         event = SimpleNamespace(
             line="%dql select tablenamereallylong. from tablenamereallylong",
@@ -74,7 +74,7 @@ def simple_autocomplete_tests():
         )
         results = completer.line_completer(event)
         assert results is not None
-        assert "my_column_1" in results
+        assert "my_column_1" in [r.text for r in results["completions"]]
 
         event = SimpleNamespace(
             line="%dql s",
@@ -84,5 +84,5 @@ def simple_autocomplete_tests():
         )
         results = completer.line_completer(event)
         assert results is not None
-        assert "19" in results
+        assert "19" in [r.text for r in results["completions"]]
         # Tablename doesn't exist
