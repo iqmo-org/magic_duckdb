@@ -32,7 +32,7 @@ magic_duckdb was created to:
 
 - Expose duckdb's functionality with minimal overhead and complexity
 - Make it easier to use duckdb in Jupyter notebooks
-- Bundle useful features, like sql formatting (beautifying) and explain analyze graphics
+- Bundle useful features, like using OpenAI to improve SQL, sql formatting (beautifying) and explain analyze graphics
 - Provide a starting point to add other useful features with minimal complexity
 
 ### Why not other projects like Jupysql or ipython-sql?
