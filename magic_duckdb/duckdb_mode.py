@@ -5,6 +5,11 @@ from typing import Optional, List
 from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
 
 
+def execute(query: str, con: duckdb.DuckDBPyConnection):
+    """Simple wrapper to allow alternative implementations or wrappers to be inserted"""
+    return con.sql(query)
+
+
 class DuckDbMode:
     """Lightweight wrapper to separate duckdb specific logic from the Magic.
     Goal here is to expose all of DuckDB's goodness, but also make it easy to extend or replace this.
@@ -36,19 +41,19 @@ class DuckDbMode:
         # query_tree
 
         if export_function == "explain_analyze_tree":
-            connection.sql("PRAGMA enable_profiling=query_tree")
-            r = connection.sql(query_string)
+            execute("PRAGMA enable_profiling=query_tree", connection)
+            r = execute(query_string, connection)
             t = r.explain(type="analyze")
             return t
         elif export_function == "explain_analyze_json":
-            connection.sql("PRAGMA enable_profiling=json")
-            r = connection.sql(query_string)
+            execute("PRAGMA enable_profiling=json", connection)
+            r = execute(query_string, connection)
             j = r.explain(type="analyze")
 
             return j
         else:
-            connection.sql("PRAGMA enable_profiling=json")
-            r = connection.sql(query_string)
+            execute("PRAGMA enable_profiling=json", connection)
+            r = execute(query_string, connection)
             j = r.explain(type="analyze")
             return draw_graphviz(j)
 
@@ -72,7 +77,7 @@ class DuckDbMode:
             return self.explain_analyze(query_string, connection, export_function)
         else:
             try:
-                r = connection.sql(query_string)
+                r = execute(query_string, connection)
             except Exception as e:
                 raise ValueError(f"Error executing {query_string} in DuckDB") from e
 
