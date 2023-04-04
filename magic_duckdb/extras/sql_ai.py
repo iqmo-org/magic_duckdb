@@ -19,9 +19,15 @@ CHATCOMPLETION_ENGINE = "gpt-3.5-turbo"
 
 
 def get_columns(connection) -> str:
-    df = connection.sql("select * from duckdb_columns").df()
+    df = connection.sql(
+        "select table_name, column_name, data_type from duckdb_columns"
+    ).df()
 
+    return df.to_csv(index=False)
     col_desc = []
+
+    return ["column_name", "data_type"]
+
     for t in df["table_name"].unique():
         cols = [
             f"{v[0]} (type = {v[1]})"
@@ -36,26 +42,35 @@ def get_columns(connection) -> str:
 
 
 def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-    if connection is None:
+
+    try:
+        if connection is None:
+            return None, None, None
+
+        t = connection.sql("PRAGMA show_tables")
+        if t is None:  # no tables = None
+            return None, None, None
+        else:
+            tables = t.df()
+
+        if len(tables) == 0:
+            tables = None
+        else:
+            tables = ", ".join(tables["name"].values)
+
+        cols = get_columns(connection)
+
+        constraints = connection.sql("select * from duckdb_constraints").df()
+
+        if len(constraints) == 0:
+            constraints = None
+        else:
+            constraints = constraints.to_csv()
+
+        return tables, cols, constraints
+    except Exception:
+        logger.exception("Error getting schema")
         return None, None, None
-
-    tables = connection.sql("PRAGMA show_tables").df()
-
-    if len(tables) == 0:
-        tables = None
-    else:
-        tables = ", ".join(tables["name"].values)
-
-    cols = get_columns(connection)
-
-    constraints = connection.sql("select * from duckdb_constraints").df()
-
-    if len(constraints) == 0:
-        constraints = None
-    else:
-        constraints = constraints.to_csv()
-
-    return tables, cols, constraints
 
 
 def call_ai(connection, chat: bool, prompt, query):
@@ -71,7 +86,7 @@ def ai_statement(connection, prompt: str, statement: str, chat: bool = False):
     tables, cols, constraints = get_schema(connection)
 
     prompt = f"{prompt}\nMy query is: {statement}\nMy database is DuckDB. DuckDB's SQL is similar to postgresql."
-    context = f"My database schema has the following tables: {tables}\nColumns: \n {cols}\n\nConstraints: {constraints}"
+    context = f"I am writing SQL for a DuckDB database. My database's tables, columns and column data types are the following comma separated table: \n{cols}\n\nConstraints: {constraints}"
 
     full_prompt = context + "\nMy question is: " + prompt
     logger.debug(f"Num tokens: {len(prompt.split(' '))}")
