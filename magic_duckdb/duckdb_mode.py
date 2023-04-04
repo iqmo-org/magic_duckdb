@@ -22,7 +22,6 @@ class DuckDbMode:
         "explain_analyze_json",
         "explain_analyze_draw",
         "analyze [alias for explain_analyze_draw]",
-        "format",
     ]
 
     def default_connection(self) -> duckdb.DuckDBPyConnection:

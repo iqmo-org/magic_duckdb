@@ -1,6 +1,9 @@
-import re
+import logging
+import argparse
+from typing import Optional
+
 from traitlets.config.configurable import Configurable
-from IPython.core.magic_arguments import magic_arguments
+from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
 from IPython.core.magic import (
     Magics,
     cell_magic,
@@ -11,9 +14,9 @@ from IPython.core.magic import (
 )
 from IPython.core.getipython import get_ipython
 from duckdb import ConnectionException, DuckDBPyConnection
+
 from magic_duckdb.duckdb_mode import DuckDbMode
-from typing import Optional
-import logging
+
 
 logger = logging.getLogger("magic_duckdb")
 
@@ -45,98 +48,109 @@ class DuckDbMagic(Magics, Configurable):
         # Add ourself to the list of module configurable via %config
         self.shell.configurables.append(self)  # type: ignore
 
-    pattern = re.compile(r"(?si)\s*(\-\S+)((\s+(\S+))?(\s+(.*))?)\s*")
+    def connect_by_objectname(self, connection_object):
+        con: DuckDBPyConnection = _get_obj_from_name(connection_object)  # type: ignore
+        if not isinstance(con, DuckDBPyConnection):
+            raise ValueError(f"{connection_object} is not a DuckDBPyConnection")
+        if con is None:
+            raise ValueError(f"Couldn't find {connection_object}")
+        else:
+            logger.info(f"Using existing connection: {connection_object}")
+
+        global connection
+        connection = con
+
+    def format_wrapper(self, query):
+        try:
+            from magic_duckdb.extras.sqlformatter import formatsql
+
+            return formatsql(query)
+        except Exception as e:
+            logger.exception("Error processing")
+            raise e
+
+    def ai_wrapper(self, chat: bool, prompt, query):
+        try:
+            from magic_duckdb.extras import sql_ai
+
+            sql_ai.call_ai(connection, chat, prompt, query)
+            return None  # suppress for now, need to figure out formatting
+        except Exception as e:
+            logger.exception("Error with AI")
+            raise e
 
     @no_var_expand
     @needs_local_scope
     @line_magic("dql")
     @cell_magic("dql")
     @magic_arguments()
-    def execute(
-        self, line: Optional[str] = None, cell: Optional[str] = None, local_ns=None
-    ):
+    @argument("-l", "--listtype", help="List the available types", action="store_true")
+    @argument("-g", "--getcon", help="Return current connection", action="store_true")
+    @argument(
+        "-d", "--default_connection", help="Use default connection", action="store_true"
+    )
+    @argument("-f", "--format", help="Format (beautify) SQL input", action="store_true")
+    @argument("-ai", help="Format (beautify) SQL input", action="store_true")
+    @argument("-aichat", help="Format (beautify) SQL input", action="store_true")
+    @argument(
+        "-cn",
+        "--connection_string",
+        help="Connect to a database using the connection string, such as :memory: or file.db",
+        nargs=1,
+        type=str,
+        action="store",
+    )
+    @argument(
+        "-co",
+        "--connection_object",
+        help="Connect to a database using the connection object",
+        nargs=1,
+        type=str,
+        action="store",
+    )
+    @argument(
+        "-t",
+        "--type",
+        help="Set the default output type",
+        nargs=1,
+        type=str,
+        action="store",
+    )
+    @argument("rest", nargs=argparse.REMAINDER)
+    def execute(self, line: str = "", cell: str = "", local_ns=None):
         global connection
 
-        # Handle arguments via a regexp. Run any statement after the argument and/or option.
-        # TODO: Replace with argparser or cmdparser or equivalent.
-        if line is not None:
-            m = self.pattern.match(line)
-            if m is not None:  # a command was found
-                cmd = m.group(1)
-                everything_after_cmd = m.group(2)
-                cmd_option = m.group(4)
-                everything_after_cmd_option = (
-                    m.group(6) if len(m.groups()) >= 6 else None
+        args = parse_argstring(self.execute, line)
+        # Grab rest of line
+        rest = " ".join(args.rest)
+        query = f"{rest}\n{cell}".strip()
+
+        logger.debug(f"Query = {query}, {len(query)}")
+        if args.listtype:
+            return dbwrapper.export_functions
+        elif args.getcon:
+            return connection
+        elif args.format:
+            return self.format_wrapper(query)
+        elif args.ai:
+            return self.ai_wrapper(False, rest, query)
+        elif args.aichat:
+            return self.ai_wrapper(False, rest, query)
+
+        if args.default_connection:
+            connection = dbwrapper.default_connection()
+        if args.connection_object:
+            self.connect_by_objectname(args.connection_object[0])
+        if args.connection_string:
+            connection = dbwrapper.connect(args.connection_string[0])
+        if args.type:
+            export_function = args.type[0]
+            if export_function in dbwrapper.export_functions:
+                self.export_function = export_function
+            else:
+                raise ValueError(
+                    f"{export_function} not found in {dbwrapper.export_functions}"
                 )
-                if cmd == "--listtypes" or cmd == "-listtypes" or cmd == "-l":
-                    return dbwrapper.export_functions
-                elif cmd == "--getcon" or cmd == "-getcon" or cmd == "-g":
-                    return connection
-                elif cmd == "--format" or cmd == "-f" or cmd == "-format":
-                    try:
-                        from magic_duckdb.extras.sqlformatter import formatsql
-
-                        return formatsql(
-                            everything_after_cmd
-                            if cell is None or len(cell) == 0
-                            else cell
-                        )
-                    except Exception as e:
-                        logger.exception("Error processing")
-                        raise e
-                elif cmd == "-d":
-                    connection = dbwrapper.default_connection()
-                    line = everything_after_cmd
-                elif cmd == "-ai" or cmd == "-aichat":
-                    try:
-                        from magic_duckdb.extras import sql_ai
-
-                        print(cell)
-                        print(everything_after_cmd)
-                        sql_ai.call_ai(
-                            connection,
-                            cmd,
-                            cmd_option
-                            if cell is None or len(cell) == 0
-                            else everything_after_cmd,  # if this is a cell magic, the first line is the entire prompt, otherwise just the first word
-                            cell
-                            if cell is not None and len(cell) > 0
-                            else everything_after_cmd_option,
-                        )
-                        return None  # suppress for now, need to figure out formatting
-                    except Exception as e:
-                        logger.exception("Error with AI")
-                        raise e
-                elif cmd == "-co":
-                    connection_object = cmd_option
-                    con: DuckDBPyConnection = _get_obj_from_name(connection_object)  # type: ignore
-                    if not isinstance(con, DuckDBPyConnection):
-                        raise ValueError(
-                            f"{connection_object} is not a DuckDBPyConnection"
-                        )
-                    if con is None:
-                        raise ValueError(f"Couldn't find {connection_object}")
-                    else:
-                        logger.info(f"Using existing connection: {connection_object}")
-                    connection = con
-                    line = everything_after_cmd_option
-                elif cmd == "-cn":
-                    connection_string = cmd_option
-                    logger.info(f"Connecting to {connection_string}")
-                    con = dbwrapper.connect(connection_string)
-                    line = everything_after_cmd_option
-                elif cmd == "-t":
-                    export_function = cmd_option
-                    if export_function in dbwrapper.export_functions:
-                        self.export_function = export_function
-                    else:
-                        raise ValueError(
-                            f"{export_function} not found in {dbwrapper.export_functions}"
-                        )
-                    line = everything_after_cmd_option
-
-        # Arguments done, now run the query (either the remainder of the line, or the cell if a cell magic)
-        query = cell if (cell is not None and len(cell) > 0) else line
 
         if query is None or len(query) == 0:
             logger.debug("Nothing to execute")

@@ -58,19 +58,13 @@ def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]
     return tables, cols, constraints
 
 
-def call_ai(connection, cmd, prompt, query):
-    print(prompt)
-    if cmd == "-aichat":
-        chat = True
-    else:
-        chat = False
-
-    return fix_statement(
+def call_ai(connection, chat: bool, prompt, query):
+    return ai_statement(
         connection=connection, prompt=prompt, statement=query, chat=chat
     )
 
 
-def fix_statement(connection, prompt: str, statement: str, chat: bool = False):
+def ai_statement(connection, prompt: str, statement: str, chat: bool = False):
 
     logger.info(f"Passing {prompt} statement to AI (chat={chat}): {statement}")
     # Prepare prompt
