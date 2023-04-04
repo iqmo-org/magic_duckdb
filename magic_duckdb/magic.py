@@ -20,7 +20,6 @@ from magic_duckdb.duckdb_mode import DuckDbMode
 
 logger = logging.getLogger("magic_duckdb")
 
-keyword = "dql"
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()
 
@@ -82,8 +81,8 @@ class DuckDbMagic(Magics, Configurable):
 
     @no_var_expand
     @needs_local_scope
-    @line_magic(keyword)
-    @cell_magic(keyword)
+    @line_magic("dql")
+    @cell_magic("dql")
     @magic_arguments()
     @argument("-l", "--listtype", help="List the available types", action="store_true")
     @argument("-g", "--getcon", help="Return current connection", action="store_true")
