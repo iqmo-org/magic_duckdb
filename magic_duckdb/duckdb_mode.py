@@ -71,7 +71,10 @@ class DuckDbMode:
         if "explain_analyze" in export_function:
             return self.explain_analyze(query_string, connection, export_function)
         else:
-            r = connection.sql(query_string)
+            try:
+                r = connection.sql(query_string)
+            except Exception as e:
+                raise ValueError(f"Error executing {query_string} in DuckDB") from e
 
             if r is None:
                 return None
