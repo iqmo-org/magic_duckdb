@@ -45,7 +45,7 @@ class DuckDbMagic(Magics, Configurable):
         # Add ourself to the list of module configurable via %config
         self.shell.configurables.append(self)  # type: ignore
 
-    pattern = re.compile(r"(?si)\s*(\-\S+)(\s+(\S+))?(\s+(.*))?\s*")
+    pattern = re.compile(r"(?si)\s*(\-\S+)((\s+(\S+))?(\s+(.*))?)\s*")
 
     @no_var_expand
     @needs_local_scope
@@ -64,9 +64,9 @@ class DuckDbMagic(Magics, Configurable):
             if m is not None:  # a command was found
                 cmd = m.group(1)
                 everything_after_cmd = m.group(2)
-                cmd_option = m.group(3)
+                cmd_option = m.group(4)
                 everything_after_cmd_option = (
-                    m.group(5) if len(m.groups()) >= 5 else None
+                    m.group(6) if len(m.groups()) >= 6 else None
                 )
                 if cmd == "--listtypes" or cmd == "-listtypes" or cmd == "-l":
                     return dbwrapper.export_functions
@@ -91,6 +91,8 @@ class DuckDbMagic(Magics, Configurable):
                     try:
                         from magic_duckdb.extras import sql_ai
 
+                        print(cell)
+                        print(everything_after_cmd)
                         sql_ai.call_ai(
                             connection,
                             cmd,
