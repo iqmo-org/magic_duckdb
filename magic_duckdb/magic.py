@@ -116,6 +116,14 @@ class DuckDbMagic(Magics, Configurable):
         type=str,
         action="store",
     )
+    @argument(
+        "-o",
+        "--output",
+        help="Write the output to the specified variable",
+        nargs=1,
+        type=str,
+        action="store",
+    )
     @argument("rest", nargs=argparse.REMAINDER)
     def execute(self, line: str = "", cell: str = "", local_ns=None):
         global connection
@@ -166,6 +174,8 @@ class DuckDbMagic(Magics, Configurable):
                 connection=connection,
                 export_function=self.export_function,
             )
+            if args.output:
+                self.shell.user_ns[args.output[0]] = o  # type: ignore
             return o
         except ConnectionException as e:
             logger.exception(
