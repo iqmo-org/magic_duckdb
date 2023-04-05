@@ -136,6 +136,31 @@ Gotchas:
 
 The jupysql/sql-alchemy/duckdb-engine %sql magic was surprisingly slow when compared to magic_duckdb or duckdb. I didn't spend a lot of time evaluating this, so please do your own evaluation: my priority was keeping magic_duckdb simple by using duckdb directly.
 
+# Capturing output
+
+Line Magics can be captured with assignment or -o:
+
+```
+# These are equivalent:
+%dql -o varname <query>
+varname = %dql <query>
+```
+
+Cell magics can only be captured with -o (var = %%dql doesn't work)
+
+```
+%%dql -o varname
+<query>
+```
+
+To silence a cell, you can stack %%capture:
+
+```
+%%capture
+%%iql -o bqldf
+<query>
+```
+
 ## Versions
 
 - SQLAlchemy 1.4.47
