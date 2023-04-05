@@ -85,7 +85,7 @@ def ai_statement(connection, prompt: str, statement: str, chat: bool = False):
     # Prepare prompt
     tables, cols, constraints = get_schema(connection)
 
-    prompt = f"{prompt}\nMy query is: {statement}\nMy database is DuckDB. DuckDB's SQL is similar to postgresql."
+    prompt = f"{prompt}\nMy query is: {statement}\nMy database is DuckDB. DuckDB's SQL is similar to postgresql. DuckDB sql supports: select, from, join, where, group by, grouping sets, having, order by, limit, sample, unnest, with, window, qualify, values and filter. "
     context = f"I am writing SQL for a DuckDB database. My database's tables, columns and column data types are the following comma separated table: \n{cols}\n\nConstraints: {constraints}"
 
     full_prompt = context + "\nMy question is: " + prompt
