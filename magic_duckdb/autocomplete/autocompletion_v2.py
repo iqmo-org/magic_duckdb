@@ -1,52 +1,29 @@
+# Autocompletion using iPython 8.6.0 or higher
+# 8.6.0 introduced several enhancements to IPCompleter.
+# An important change is being able to complete against the entire cell text
+# for a cell magic. In v1 (pre 8.6.0), could only complete against the current line.
+
 import re
 from typing import List, Optional
 from IPython.core.completer import IPCompleter
 
-from magic_duckdb import magic
+from magic_duckdb.autocomplete.common import (
+    get_table_names,
+    get_column_names,
+    pragma_phrases,
+    sql_phrases,
+    sql_expects_tablename,
+)
 from IPython.core.completer import (
     SimpleMatcherResult,
     SimpleCompletion,
     context_matcher,
     CompletionContext,
 )
+
 import logging
 
 logger = logging.getLogger("magic_duckdb")
-
-
-def get_table_names() -> List[str]:
-    # TODO: Cache?
-    try:
-        if magic.connection is not None:
-            tables = magic.connection.sql("show tables")
-            if tables is None:
-                return []
-            else:
-                return list(tables.df()["name"])
-        else:
-            return []
-    except Exception:
-        logger.debug("Unable to get table names")
-        return []
-
-
-def get_column_names(tablename: str) -> List[str]:
-    # TODO: Cache?
-    try:
-        if magic.connection is not None:
-            columns = magic.connection.sql(f"pragma table_info('{tablename}')")
-            if columns is None:
-                return []
-            else:
-                names = list(columns.df().astype(str)["name"])
-                # logger.debug(names)
-                return names
-        else:
-            return []
-    except Exception:
-        logger.debug("Unable to get column names")
-        return []
-
 
 pragma_before = re.compile(r"(?si).*pragma\s*")
 
@@ -55,90 +32,8 @@ class DqlCustomCompleter(IPCompleter):
     # In VSCode, text_until_cursor only returns the current line... not the entire cell/block. As far as I can tell, we'd need an extension for vscode, which seems like a bit too much work
 
     def __init__(self, *args, **kwargs):
+        self.ipython = kwargs.get("shell")
         super().__init__(*args, **kwargs)
-
-    pragmas = []
-
-    sql_expects_tablename = [
-        "UNION",
-        "UNION ALL",
-        "UNION ALL BY NAME",
-        "UNION BY NAME",
-        "JOIN",
-        "INNER JOIN",
-        "LEFT JOIN",
-        "RIGHT JOIN",
-        "FULL JOIN",
-        "LEFT OUTER JOIN",
-        "RIGHT OUTER JOIN",
-        "FROM",
-        "INTO",
-    ]
-
-    sql_phrases = [
-        "PRAGMA",
-        "SELECT",
-        "WHERE",
-        "GROUP BY",
-        "ORDER BY",
-        "LIMIT",
-        "INSERT",
-        "UPDATE",
-        "DELETE",
-        "ALTER",
-        "DROP",
-        "TRUNCATE",
-        "TABLE",
-        "DATABASE",
-        "INDEX",
-        "VIEW",
-        "FUNCTION",
-        "PROCEDURE",
-        "TRIGGER",
-        "AND",
-        "OR",
-        "NOT",
-        "BETWEEN",
-        "LIKE",
-        "IN",
-        "NULL",
-        "IS",
-        "EXISTS",
-        "COUNT",
-        "SUM",
-        "MIN",
-        "MAX",
-        "AVG",
-        "DISTINCT",
-        "AS",
-        "CREATE TABLE",
-        "CREATE OR REPLACE TABLE",
-        "CREATE TABLE IF NOT EXISTS",
-        "CREATE VIEW",
-    ]
-
-    pragma_phrases = [
-        "PRAGMA version",
-        "PRAGMA database_list",
-        "PRAGMA database_size",
-        "PRAGMA show_tables",
-        "PRAGMA show_tables_expanded",
-        "PRAGMA table_info('",
-        "PRAGMA functions",
-        "PRAGMA collations",
-        "PRAGMA enable_progress_bar",
-        "PRAGMA disable_progress_bar",
-        "PRAGMA enable_profiling",
-        "PRAGMA disable_profiling",
-        "PRAGMA disable_optimizer",
-        "PRAGMA enable_optimizer",
-        "PRAGMA enable_verification",
-        "PRAGMA disable_verification",
-        "PRAGMA verify_parallelism",
-        "PRAGMA disable_verify_parallelism",
-        "PRAGMA force_index_join",
-        "PRAGMA force_checkpoint",
-    ]
 
     all_phrases = sql_expects_tablename + sql_phrases + pragma_phrases
     lastword_pat = re.compile(r"(?si)(^|.*[\s])(\S+)\.")
@@ -146,21 +41,22 @@ class DqlCustomCompleter(IPCompleter):
 
     def convert_to_return(
         self, completions: List[str], matched_fragment: Optional[str] = None
-    ):
-
-        completions = [SimpleCompletion(text=t, type="duckdb") for t in completions]
+    ) -> SimpleMatcherResult:
+        simple_completions = [
+            SimpleCompletion(text=t, type="duckdb") for t in completions
+        ]
 
         # It took way too many hours to figure out that matched_fragment="" was needed here
         # Otherwise the results get suppressed
         r = SimpleMatcherResult(
-            completions=completions,
+            completions=simple_completions,
             suppress=True,
             matched_fragment=matched_fragment,
             ordered=True,
         )
         return r
 
-    @context_matcher()  # forces v2 api
+    @context_matcher()  # type: ignore
     def line_completer(self, event: CompletionContext) -> SimpleMatcherResult:
         # if not %dql, returns nothing
         # if ends with a sql_expects_tablename phrase, then returns just table names
@@ -169,13 +65,14 @@ class DqlCustomCompleter(IPCompleter):
         # https://github.com/ipython/ipython/blob/a418f38c4f96de1755701041fe5d8deffbf906db/IPython/core/completer.py#L563
 
         try:
-
-            logger.info(f"{type(event)}")
+            # logger.info(event)
+            # return self.convert_to_return(pragma_phrases + sql_phrases, event.token)
+            logger.info(f"{type(event)}, {self.ipython}, {event}")
 
             if hasattr(event, "full_text"):
                 text = event.full_text
             else:
-                logger.info("No full_text, nothing to do")
+                logger.info(f"No full_text, nothing to do {event}")
                 return self.convert_to_return([])
 
             if not text.startswith("%dql") and not text.startswith("%%dql"):
@@ -201,20 +98,21 @@ class DqlCustomCompleter(IPCompleter):
                 # VScode is ignoring or suppressing completions after a period.
                 # get the word preceding the period
                 tablename = token[:-1]
-
-                columns = get_column_names(tablename)
+                logger.debug(tablename)
+                columns = get_column_names(self.ipython, tablename)
                 logger.debug(f"Using columns {columns}")
                 return self.convert_to_return(columns, matched_fragment="")
 
             # if the last phrase should be followed by a table name, return the list of tables
             elif self.expects_table_pat.match(line_after) is not None:
-                # logger.debug("Expects table name")
-                names = get_table_names()
-                return self.convert_to_return(names)
+                names = get_table_names(self.ipython)
+                logger.debug(f"Expects table name, returning {names}")
+
+                return self.convert_to_return(names, event.token)
 
             # default: return all phrases and tablenames
-            allp = self.all_phrases + get_table_names()
-            return self.convert_to_return(allp)
+            allp = self.all_phrases + get_table_names(self.ipython)
+            return self.convert_to_return(allp, event.token)
 
         except Exception:
             logger.exception(f"Error completing {event}")
@@ -253,8 +151,8 @@ def init_completer(ipython):
 
     # ipython.Completer.suppress_competing_matchers = True
     # ip.Completer.custom_completers.add_re(r'(?si).*dql.*', dql_completer.complete)
-    # ip.set_custom_completer(dql_completer.complete, 0)
 
+    # ipython.Completer.custom_completer_matcher = dql_completer.line_completer
     ipython.Completer.custom_matchers.insert(0, dql_completer.line_completer)
     ipython.use_jedi = False
 

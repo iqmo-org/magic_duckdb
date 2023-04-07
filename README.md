@@ -5,7 +5,7 @@ iPython Cell %%dql and Line %dql magics for DuckDB, for both Jupyter and VSCode
 ## Quick Start
 
 ```
-%pip install magic_duckdb
+%pip install magic_duckdb --upgrade --quiet
 %load_ext magic_duckdb
 %dql select * from range(100)
 ```
@@ -93,11 +93,11 @@ analyze (or explain_analyze_draw) generates an graphical version of the JSON tre
 magic.explain_analyze_graphviz.dot_path = 'path_to_dot'
 ```
 
-Graphing Dependency / Why GraphViz? GraphViz was quick, simple, and has the best layout engines available. I tried to find a comparable pure-Python library and failed.
+Graphing Dependency / Why GraphViz? GraphViz was quick, simple, and has the best layout engines available. [D2](https://github.com/terrastruct/d2) is a promising option but in either case, requires an external dependency, but I tried to find a comparable pure Python library and failed.
 
 ## %dql -t format [experimental]
 
-SQL Formatting uses https://github.com/sql-formatter-org/sql-formatter. This is a javascript library, so it needs to be installed separately.
+SQL Formatting uses [sql-formatter](https://github.com/sql-formatter-org/sql-formatter). This is a javascript library, so it needs to be installed separately, although it's executed via npx so should be fine as long as you have npx / node in your path.
 
 It does not have a duckdb language, so the PostgreSQL language is used. It's been good enough, but some queries might not format well until/unless they add a duckdb mode.
 
@@ -105,32 +105,27 @@ SQL Formatter Dependency / Why SQL Formatter and not something pure Python? The 
 
 ## Autocompletion: Work in Progress
 
-There's a rough implementation of an autocompleter that can be enabled prior to loading the extension.
+There's two different Autocompletion implementations, one for MatcherAPIv2 and the other (pre-ipython 8.6.0) for MatcherAPIv1. The MatcherAPIv2 version is tried first, and if it fails, the MatcherAPIv1 version is loaded. MatcherAPIv1 will not match the entire results of a cell: it's limited to a line by line match.
 
-This is really a proof of concept at getting the plumbing to work. The actual autocompletion should probably leverage duckdb's existing work: [4921](https://github.com/duckdb/duckdb/pull/4921) and test cases here: [shell-test.py](https://github.com/Mytherin/duckdb/blob/5f75cb90b478434f0a1811af0695ea3a186a67a8/tools/shell/shell-test.py)
+- Phrase completion: `%dql create <tab>` will show common phrases, such as `CREATE OR REPLACE`
+- Pragma completion: `%dql PRAGMA <tab>` will list available pragma's.
+- Table completion: `%dql select * from <tab>` will list available tables and Pandas DataFrames. This is triggered by a list of keywords (ie: from) that are expected to be followed. See magic_duckdb.autocomplete.common for the keywords.
+- Column completion: `%dql select tablename.<tab> from tablename` will list available tables and Pandas DataFrames for tablename.
+
+Notes:
+
+- VScode will autocomplete differently than Jupyter: For instance, VScode autocompletes on spaces, Jupyter on tabs.
+- Column completion only matches table or dataframe names. It doesn't look up aliases or analyze subqueries.
+- This is meant as a proof of concept. The next step is to leverage duckdb's existing work: [4921](https://github.com/duckdb/duckdb/pull/4921) and test cases here: [shell-test.py](https://github.com/Mytherin/duckdb/blob/5f75cb90b478434f0a1811af0695ea3a186a67a8/tools/shell/shell-test.py)
+- https://jupyter-contrib-nbextensions.readthedocs.io/en/latest/nbextensions/hinterland/README.html: Enable code autocompletion menu for every keypress in a code cell, instead of only calling it with tab.
+
+Autocompletion can be disabled with:
 
 ```
 from magic_duckdb import magic
-magic.ENABLE_AUTOCOMPLETE=True
+magic.ENABLE_AUTOCOMPLETE=False
 %load_ext magic_duckdb
 ```
-
-Completions:
-
-- Common phrases, such as PRAGMAs and SQL phrases like CREATE OR REPLACE TABLE
-- Table names from the current duckdb connection
-- Column names: Column names are suggested when a tablename is followed by a period. Aliases are not discovered, so exact table names (ie; tablenamexyz.) will be looked up.
-
-Limitations:
-
-- Line magics %dql only, not yet for %%dql cell magics
-- Case sensitive: it'll autocomplete CREA<tab>, but not CREA<tab>
-
-Gotchas:
-
-- Autocompletion uses the iPython 8.2.x signatures, so won't work in older iPython installs.
-- VSCode behaves differently than Jupyter: Jupyter autocompletes on Tab, VSCode defaults to spaces.
-- VSCode also seems to insert certain autocompletions outside of the ipython stack, not allowing an autocompleter to override certain completions.
 
 # Performance Comparison
 

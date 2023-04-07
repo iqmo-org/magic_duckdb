@@ -23,7 +23,7 @@ logger = logging.getLogger("magic_duckdb")
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()
 
-ENABLE_AUTOCOMPLETE = False
+ENABLE_AUTOCOMPLETE = True
 
 connection: Optional[DuckDBPyConnection] = None
 
@@ -192,12 +192,18 @@ def load_ipython_extension(ip):
 
     if ENABLE_AUTOCOMPLETE:
         try:
-            from magic_duckdb.extras.autocompletion import init_completer
+            from magic_duckdb.autocomplete.autocompletion_v2 import init_completer
 
             init_completer(ipython=ip)
         except Exception:
             logger.exception(
-                "Unable to initialize autocompletion. iPython 8.x is required."
+                "Unable to initialize autocompletion_v2. iPython 8.6.0+ is required."
             )
+            try:
+                from magic_duckdb.autocomplete.autocompletion_v2 import init_completer
+
+                init_completer(ipython=ip)
+            except Exception:
+                logger.exception("Unable to initialize autocompletion_v1")
 
     ip.register_magics(DuckDbMagic)
