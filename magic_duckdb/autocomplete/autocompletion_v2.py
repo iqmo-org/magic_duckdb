@@ -66,14 +66,14 @@ class DqlCustomCompleter(IPCompleter):
 
         try:
             # logger.info(event)
-            logger.info(f"{type(event)}, {self.ipython}, {event}")
+            logger.debug(f"{type(event)}, {self.ipython}, {event}")
 
             # return self.convert_to_return(["SELECT"], event.token)
 
             if hasattr(event, "full_text"):
                 text = event.full_text
             else:
-                logger.info(f"No full_text, nothing to do {event}")
+                logger.debug(f"No full_text, nothing to do {event}")
                 return self.convert_to_return([])
 
             if not text.startswith("%dql") and not text.startswith("%%dql"):
@@ -88,7 +88,6 @@ class DqlCustomCompleter(IPCompleter):
             if hasattr(event, "token"):
                 token = event.token
             else:
-                logger.info(f"{event}")
                 token = ""
 
             line_after = text[4:].strip()
@@ -100,6 +99,8 @@ class DqlCustomCompleter(IPCompleter):
                 # get the word preceding the period
                 tablename = token[:-1]
                 logger.debug(tablename)
+
+                # TODO: Deal with Aliases and SubQueries (xyz as abc)
                 columns = get_column_names(self.ipython, tablename)
                 logger.debug(f"Using columns {columns}")
                 return self.convert_to_return(columns, matched_fragment="")
@@ -111,7 +112,7 @@ class DqlCustomCompleter(IPCompleter):
                     names = ["No Tables or DataFrames Found"]
                 logger.debug(f"Expects table name, returning {names}")
 
-                return self.convert_to_return(names, matched_fragment="")
+                return self.convert_to_return(names, matched_fragment=event.token)
 
             # default: return all phrases and tablenames
             allp = self.all_phrases + get_table_names(self.ipython)
