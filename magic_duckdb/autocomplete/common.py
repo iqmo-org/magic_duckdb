@@ -131,3 +131,20 @@ def get_column_names(ipython, tablename: str) -> List[str]:
     except Exception:
         logger.exception("Unable to get column names")
         return []
+
+
+def init_completers(ip):
+    try:
+        from magic_duckdb.autocomplete.autocompletion_v2 import init_completer
+
+        init_completer(ipython=ip)
+    except Exception:
+        logger.exception(
+            "Unable to initialize autocompletion_v2. iPython 8.6.0+ is required. Trying v1 completer"
+        )
+        try:
+            from magic_duckdb.autocomplete.autocompletion_v2 import init_completer
+
+            init_completer(ipython=ip)
+        except Exception:
+            logger.exception("Unable to initialize autocompletion_v1")

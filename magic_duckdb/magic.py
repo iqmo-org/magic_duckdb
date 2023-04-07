@@ -15,16 +15,17 @@ from IPython.core.magic import (
 from IPython.core.getipython import get_ipython
 from duckdb import ConnectionException, DuckDBPyConnection
 
+from magic_duckdb.autocomplete.common import init_completers
 from magic_duckdb.duckdb_mode import DuckDbMode
 
 
 logger = logging.getLogger("magic_duckdb")
 
+# Disable autocompletion initialization by setting this to False before loading extension
+ENABLE_AUTOCOMPLETE = True
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()
-
-ENABLE_AUTOCOMPLETE = True
-
+# database connection object created via -d (default), -cn (connection string) or -co (connection object)
 connection: Optional[DuckDBPyConnection] = None
 
 
@@ -35,8 +36,6 @@ def _get_obj_from_name(name: str) -> Optional[object]:
 
 @magics_class
 class DuckDbMagic(Magics, Configurable):
-    # database connection object
-    # created via -d (default), -cn (connection string) or -co (connection object)
 
     # selected via -t. None = Pandas.
     export_function = None
@@ -45,20 +44,19 @@ class DuckDbMagic(Magics, Configurable):
         Configurable.__init__(self, config=shell.config)
         Magics.__init__(self, shell=shell)
 
-        # Add ourself to the list of module configurable via %config
+        # Add to configurable modules via %config
         self.shell.configurables.append(self)  # type: ignore
 
     def connect_by_objectname(self, connection_object):
         con: DuckDBPyConnection = _get_obj_from_name(connection_object)  # type: ignore
         if not isinstance(con, DuckDBPyConnection):
             raise ValueError(f"{connection_object} is not a DuckDBPyConnection")
-        if con is None:
+        elif con is None:
             raise ValueError(f"Couldn't find {connection_object}")
         else:
             logger.info(f"Using existing connection: {connection_object}")
-
-        global connection
-        connection = con
+            global connection
+            connection = con
 
     def format_wrapper(self, query):
         try:
@@ -191,19 +189,6 @@ def load_ipython_extension(ip):
         raise ValueError("No Ipython found")
 
     if ENABLE_AUTOCOMPLETE:
-        try:
-            from magic_duckdb.autocomplete.autocompletion_v2 import init_completer
-
-            init_completer(ipython=ip)
-        except Exception:
-            logger.exception(
-                "Unable to initialize autocompletion_v2. iPython 8.6.0+ is required."
-            )
-            try:
-                from magic_duckdb.autocomplete.autocompletion_v2 import init_completer
-
-                init_completer(ipython=ip)
-            except Exception:
-                logger.exception("Unable to initialize autocompletion_v1")
+        init_completers(ip)
 
     ip.register_magics(DuckDbMagic)

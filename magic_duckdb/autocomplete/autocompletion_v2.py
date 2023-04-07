@@ -23,7 +23,7 @@ from IPython.core.completer import (
 
 import logging
 
-logger = logging.getLogger("magic_duckdb")
+logger = logging.getLogger(__name__)
 
 pragma_before = re.compile(r"(?si).*pragma\s*")
 
@@ -66,8 +66,9 @@ class DqlCustomCompleter(IPCompleter):
 
         try:
             # logger.info(event)
-            # return self.convert_to_return(pragma_phrases + sql_phrases, event.token)
             logger.info(f"{type(event)}, {self.ipython}, {event}")
+
+            # return self.convert_to_return(["SELECT"], event.token)
 
             if hasattr(event, "full_text"):
                 text = event.full_text
@@ -106,9 +107,11 @@ class DqlCustomCompleter(IPCompleter):
             # if the last phrase should be followed by a table name, return the list of tables
             elif self.expects_table_pat.match(line_after) is not None:
                 names = get_table_names(self.ipython)
+                if len(names) == 0:
+                    names = ["No Tables or DataFrames Found"]
                 logger.debug(f"Expects table name, returning {names}")
 
-                return self.convert_to_return(names, event.token)
+                return self.convert_to_return(names, matched_fragment="")
 
             # default: return all phrases and tablenames
             allp = self.all_phrases + get_table_names(self.ipython)
@@ -125,7 +128,17 @@ def init_completer(ipython):
 
     # Development notes:
     # This took a while to figure out, partially because of the multiple APIs and signatures involved.
-    # Read the links below to better understand how this all really works.
+    #
+    # What I learned:
+    # The ipython (get_ipython) environment has a Completer object
+    # Completer is an IPCompleter
+    # You can extend this completer in several ways, including:
+    # - Wrapping it
+    # - Registering a custom_completer, of which there are several ways: add_hook, Completer.custom_completers.add_s and add_re, or customer_completers.insert
+    #
+    # ipython 8.6.0 introduced new a v2 version of the API, for completers decorated with @context_matcher(), this API uses a different signature
+    # see ipython.core.completer for more info
+    # The main advantage of v2 is getting the full cell text, not just current cell
     #
     # add_s or add_re calls with two parameters:
     # callable(self, event)
@@ -152,8 +165,8 @@ def init_completer(ipython):
     # ipython.Completer.suppress_competing_matchers = True
     # ip.Completer.custom_completers.add_re(r'(?si).*dql.*', dql_completer.complete)
 
-    # ipython.Completer.custom_completer_matcher = dql_completer.line_completer
-    ipython.Completer.custom_matchers.insert(0, dql_completer.line_completer)
-    ipython.use_jedi = False
+    ipython.Completer.custom_completer_matcher = dql_completer.line_completer
+    # ipython.Completer.custom_matchers.insert(0, dql_completer.line_completer)
+    # ipython.use_jedi = False
 
     # ipython.Completer.suppress_competing_matchers = True
