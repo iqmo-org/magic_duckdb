@@ -14,18 +14,27 @@ iPython Cell %%dql and Line %dql magics for DuckDB, for both Jupyter and VSCode
 
 ```
 Connection:
--cn <connection_string>: Create a new connection to a DuckDB. Example: %dql -cn :memory:
--co <connection_object>: Use an existing DuckDB Connection. Example: %dql -co con
+-cn <connection_string>: Create a new connection to a DuckDB.
+    %dql -cn myfile.db
+-co <connection_object>: Use an existing DuckDB Connection.
+    con = duckdb.connect("somefile.db")
+    %dql -co con
 -d: Use the duckdb.default_connection
---getcon: Get the current connection, regardless of how it was created
+--getcon: Get the current connection
+    con = %dql --getcon
 
 Types:
---listtypes: Returns a list of available output types. Pandas df is the default type.
--t <type>: Selects the type for this and all future requests.
+--listtypes: Returns a list of available output types
+-t <type> [default: df]: Selects the type for this and all future requests.
 
 Other:
 -ai / -aichat: Route request to OpenAI
--r: Replace {var} with variable strings from the environment. This is for parameterizing queries.
+    %%dql -ai Fix my sql
+    ....
+
+-r: Replace {var} with variable strings from the environment
+    var1 = "some string"
+    %dql -r select * from {var1} join table
 ```
 
 See notebooks/examples.ipynb for complete usage examples.
