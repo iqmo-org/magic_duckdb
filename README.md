@@ -22,6 +22,10 @@ Connection:
 Types:
 --listtypes: Returns a list of available output types. Pandas df is the default type.
 -t <type>: Selects the type for this and all future requests.
+
+Other:
+-ai / -aichat: Route request to OpenAI
+-r: Replace {var} with variable strings from the environment. This is for parameterizing queries.
 ```
 
 See notebooks/examples.ipynb for complete usage examples.

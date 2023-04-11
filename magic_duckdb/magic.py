@@ -83,6 +83,12 @@ class DuckDbMagic(Magics, Configurable):
     @cell_magic("dql")
     @magic_arguments()
     @argument("-l", "--listtype", help="List the available types", action="store_true")
+    @argument(
+        "-r",
+        "--replace",
+        help="Replace any {var}'s from environment",
+        action="store_true",
+    )
     @argument("-g", "--getcon", help="Return current connection", action="store_true")
     @argument(
         "-d", "--default_connection", help="Use default connection", action="store_true"
@@ -138,11 +144,15 @@ class DuckDbMagic(Magics, Configurable):
             return connection
         elif args.format:
             return self.format_wrapper(query)
+
         elif args.ai:
             return self.ai_wrapper(False, rest, query)
         elif args.aichat:
             return self.ai_wrapper(False, rest, query)
 
+        if args.replace:
+            # Replace any {var}'s with the string values
+            query = query.format(**get_ipython().user_ns)
         if args.default_connection:
             connection = dbwrapper.default_connection()
         if args.connection_object:
