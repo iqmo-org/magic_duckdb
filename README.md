@@ -131,10 +131,6 @@ magic.ENABLE_AUTOCOMPLETE=False
 %load_ext magic_duckdb
 ```
 
-# Performance Comparison
-
-The jupysql/sql-alchemy/duckdb-engine %sql magic was surprisingly slow when compared to magic_duckdb or duckdb. I didn't spend a lot of time evaluating this, so please do your own evaluation: my priority was keeping magic_duckdb simple by using duckdb directly.
-
 # Capturing output
 
 Line Magics can be captured with assignment or -o:
@@ -159,6 +155,10 @@ To silence a cell, you can stack %%capture:
 %%iql -o bqldf
 <query>
 ```
+
+# Performance Comparison
+
+The jupysql/sql-alchemy/duckdb-engine %sql magic was surprisingly slow when compared to magic_duckdb or duckdb. I didn't spend a lot of time evaluating this, so please do your own evaluation: my priority was keeping magic_duckdb simple by using duckdb directly.
 
 ## Versions
 
