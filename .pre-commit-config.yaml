@@ -19,6 +19,10 @@ repos:
       - id: prettier
         exclude: "packages/app/public/.*|packages/jupyter_app_base/dist/.*|packages/app/build/.*|pyrightconfig.json"
         pass_filenames: true
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.261
+    hooks:
+      - id: ruff
   - repo: "local"
     hooks:
       - entry: tsc --noEmit
