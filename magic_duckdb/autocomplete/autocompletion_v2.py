@@ -124,7 +124,6 @@ class DqlCustomCompleter(IPCompleter):
 
 
 def init_completer(ipython):
-
     dql_completer = DqlCustomCompleter(shell=ipython, greedy=True, attr_matches=True)
 
     # Development notes:

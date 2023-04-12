@@ -43,18 +43,18 @@ class DuckDbMode:
         if export_function == "explain_analyze_tree":
             execute_db("PRAGMA enable_profiling=query_tree", connection)
             r = execute_db(query_string, connection)
-            t = r.explain(type="analyze")
+            t = r.explain(type="analyze")  # type: ignore
             return t
         elif export_function == "explain_analyze_json":
             execute_db("PRAGMA enable_profiling=json", connection)
             r = execute_db(query_string, connection)
-            j = r.explain(type="analyze")
+            j = r.explain(type="analyze")  # type: ignore
 
             return j
         else:
             execute_db("PRAGMA enable_profiling=json", connection)
             r = execute_db(query_string, connection)
-            j = r.explain(type="analyze")
+            j = r.explain(type="analyze")  # type: ignore
             return draw_graphviz(j)
 
     def execute(
@@ -63,7 +63,6 @@ class DuckDbMode:
         connection: Optional[duckdb.DuckDBPyConnection] = None,
         export_function: Optional[str] = None,
     ):
-
         if connection is None:
             connection = self.default_connection()
 

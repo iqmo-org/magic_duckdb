@@ -36,7 +36,6 @@ def _get_obj_from_name(name: str) -> Optional[object]:
 
 @magics_class
 class DuckDbMagic(Magics, Configurable):
-
     # selected via -t. None = Pandas.
     export_function = None
 
@@ -152,7 +151,7 @@ class DuckDbMagic(Magics, Configurable):
 
         if args.replace:
             # Replace any {var}'s with the string values
-            query = query.format(**get_ipython().user_ns)
+            query = query.format(**get_ipython().user_ns)  # type: ignore
         if args.default_connection:
             connection = dbwrapper.default_connection()
         if args.connection_object:

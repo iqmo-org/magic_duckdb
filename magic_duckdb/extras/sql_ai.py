@@ -42,7 +42,6 @@ def get_columns(connection) -> str:
 
 
 def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-
     try:
         if connection is None:
             return None, None, None
@@ -80,7 +79,6 @@ def call_ai(connection, chat: bool, prompt, query):
 
 
 def ai_statement(connection, prompt: str, statement: str, chat: bool = False):
-
     logger.info(f"Passing {prompt} statement to AI (chat={chat}): {statement}")
     # Prepare prompt
     tables, cols, constraints = get_schema(connection)
