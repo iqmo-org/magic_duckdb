@@ -81,7 +81,7 @@ class DuckDbMagic(Magics, Configurable):
     @line_magic("dql")
     @cell_magic("dql")
     @magic_arguments()
-    @argument("-l", "--listtype", help="List the available types", action="store_true")
+    @argument("-l", "--listtypes", help="List the available types", action="store_true")
     @argument(
         "-r",
         "--replace",
@@ -136,8 +136,7 @@ class DuckDbMagic(Magics, Configurable):
         rest = " ".join(args.rest)
         query = f"{rest}\n{cell}".strip()
 
-        logger.debug(f"Query = {query}, {len(query)}")
-        if args.listtype:
+        if args.listtypes:
             return dbwrapper.export_functions
         elif args.getcon:
             return connection
@@ -166,6 +165,8 @@ class DuckDbMagic(Magics, Configurable):
                 raise ValueError(
                     f"{export_function} not found in {dbwrapper.export_functions}"
                 )
+
+        logger.debug(f"Query = {query}, {len(query)}")
 
         if query is None or len(query) == 0:
             logger.debug("Nothing to execute")
