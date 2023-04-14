@@ -139,7 +139,7 @@ def init_completers(ip):
 
         init_completer(ipython=ip)
     except Exception:
-        logger.exception(
+        logger.debug(
             "Unable to initialize autocompletion_v2. iPython 8.6.0+ is required. Trying v1 completer"
         )
         try:
@@ -147,4 +147,4 @@ def init_completers(ip):
 
             init_completer(ipython=ip)
         except Exception:
-            logger.exception("Unable to initialize autocompletion_v1")
+            logger.debug("Unable to initialize autocompletion_v1")
