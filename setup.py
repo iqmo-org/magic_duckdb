@@ -9,7 +9,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="magic_duckdb",
-    version="0.1.14",
+    version="0.1.15",
     description="Jupyter Cell and Line Magics for DuckDB",
     long_description=long_description,
     long_description_content_type="text/markdown",

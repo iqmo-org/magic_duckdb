@@ -3,7 +3,7 @@ import duckdb
 from typing import Optional, List
 import json
 from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
-from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz
+from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz, ast_tree
 
 
 def execute_db(query: str, con: duckdb.DuckDBPyConnection, execute: bool = False):
@@ -36,8 +36,9 @@ class DuckDbMode:
         "explain_analyze_json",
         "explain_analyze_draw",
         "analyze",
-        "ast",
+        "ast_json",
         "ast_draw",
+        "ast_tree",
     ]
 
     def default_connection(self) -> duckdb.DuckDBPyConnection:
@@ -74,7 +75,7 @@ class DuckDbMode:
             r = execute_db(query_string, connection, False)
             j = r.explain()  # type: ignore
             return j
-        elif explain_function == "ast" or explain_function == "ast_draw":
+        elif explain_function.startswith("ast"):
             ## TODO: escape inner sql
             df = execute_db(
                 query=f"select json_serialize_sql('{query_string}')",
@@ -83,10 +84,15 @@ class DuckDbMode:
             ).df()
             json_str = df.iat[0, 0]
             json_obj = json.loads(json_str)
-            if explain_function == "ast_draw":
+            if explain_function == "ast_json":
+                return json_obj
+            elif explain_function == "ast_draw":
                 return ast_draw_graphviz(json_obj)
+            elif explain_function == "ast_tree":
+                return ast_tree(json_obj)
             else:
-                return json_obj  # json.dumps(json_obj, indent=2)
+                raise ValueError(f"Unexpected AST mode {explain_function}")
+
         else:
             raise ValueError(f"Unexpected explain mode {explain_function}")
 

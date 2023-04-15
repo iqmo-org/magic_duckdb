@@ -81,7 +81,7 @@ This is comparable to the following Python code:
 connection.sql(query).<type>()
 ```
 
-## -e [explain | explain_analyze_tree | explain_analyze_json | explain_analyze_draw | analyze | ast | ast_draw]
+## -e [explain | explain_analyze_tree | explain_analyze_json | explain_analyze_draw | analyze | ast_json | ast_tree | ast_draw]
 
 Several modes are available for displaying the explain, explain analyze or ast (via json_serialize_sql) output.
 
