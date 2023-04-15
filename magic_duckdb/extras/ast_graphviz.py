@@ -61,8 +61,10 @@ def get_tree(ast_json) -> Tuple[List[Node], List[Tuple[Node, Node]]]:
         elif isinstance(o, dict):
             if "type" in o:
                 node.properties["type"] = o["type"]
+            if "class" in o and o["class"] != o.get("type"):
+                node.properties["class"] = o["class"]
             for k, v in o.items():
-                if k != "type":
+                if k != "type" and k != "class":
                     process_node(k, v, node)
         elif isinstance(o, list):
             for obj in o:  # skip over
