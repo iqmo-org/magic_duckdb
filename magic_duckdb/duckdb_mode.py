@@ -77,11 +77,11 @@ class DuckDbMode:
             return j
         elif explain_function.startswith("ast"):
             ## TODO: escape inner sql
-            df = execute_db(
-                query=f"select json_serialize_sql('{query_string}')",
-                con=connection,
-                execute=True,
-            ).df()
+            print(type(query_string))
+            r = connection.execute(
+                "select json_serialize_sql($1::varchar)", [query_string]
+            )
+            df = r.df()
             json_str = df.iat[0, 0]
             json_obj = json.loads(json_str)
             if explain_function == "ast_json":
