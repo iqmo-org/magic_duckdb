@@ -35,6 +35,8 @@ Other:
 -r: Replace {var} with variable strings from the environment
     var1 = "some string"
     %dql -r select * from {var1} join table
+
+-e <explain_mode>: Display the explain plan, or explain analyze, or AST
 ```
 
 See notebooks/examples.ipynb for complete usage examples.
@@ -69,25 +71,24 @@ There are also separate files for drawing explain analyze graphs and formatting 
 - Graphical Explain Analyze: Formats complex explain analyze results using Graphviz. Requires both graphviz python module and graphviz binaries in your PATH.
 - AI Suggestions and Fixing: -ai and -aichat route the requests to OpenAI. Requires an OpenAI developer key.
 
-## Data Formats
+## -t [df | arrow | pl | relation | show]
 
-The following formats are supported:
+Returns the result in the selected type.
 
-```
-%dql --listtypes
-> ['df', 'arrow', 'pl', 'describe', 'explain', 'show', 'relation', 'explain_analyze_tree', 'explain_analyze_json', 'explain_analyze_draw', 'format_sql', 'analyze [alias for explain_analyze_draw]']
-%dql -t arrow
-```
-
-### %dql -t [df | arrow | pl | relation | show | explain]
-
-Executes and returns the appropriate method for the type:
+This is comparable to the following Python code:
 
 ```
 connection.sql(query).<type>()
 ```
 
-## %dql -t [explain_analyze_tree | explain_analyze_json]
+## -e [explain | explain_analyze_tree | explain_analyze_json | explain_analyze_draw | analyze | ast | ast_draw]
+
+Several modes are available for displaying the explain, explain analyze or ast (via json_serialize_sql) output.
+
+- explain_analyze_tree returns a text-based display of the explain_analyze_json output
+- explain_analyze_draw is similar but uses GraphViz for display, which handles large graphs better
+- ast uses [json_serialize_sql](https://github.com/duckdb/duckdb/discussions/6922) to output the AST of the query
+- ast_draw passes the json through graphviz to generate a graphical version
 
 ```
 connection.sql("PRAGMA enable_profiling=[json | query_tree]")
@@ -96,9 +97,7 @@ t = r.explain(type= "analyze")
 return t
 ```
 
-### %dql -t analyze [experimental - requires 0.7.2+]
-
-analyze (or explain_analyze_draw) generates an graphical version of the JSON tree created by explain_analyze_json. This version handles large, complex trees well and is easily modified or otherwise extended.
+#### explain_analyze_draw via Graphviz
 
 [graphviz](https://graphviz.org/) must be installed on your system, and "dot" or "dot.exe" must be in your PATH. If it's installed, but not in PATH, set the path with:
 
@@ -108,7 +107,7 @@ magic.explain_analyze_graphviz.dot_path = 'path_to_dot'
 
 Graphing Dependency / Why GraphViz? GraphViz was quick, simple, and has the best layout engines available. [D2](https://github.com/terrastruct/d2) is a promising option but in either case, requires an external dependency, but I tried to find a comparable pure Python library and failed.
 
-## %dql -t format [experimental]
+### %dql --format [experimental]
 
 SQL Formatting uses [sql-formatter](https://github.com/sql-formatter-org/sql-formatter). This is a javascript library, so it needs to be installed separately, although it's executed via npx so should be fine as long as you have npx / node in your path.
 
@@ -116,9 +115,17 @@ It does not have a duckdb language, so the PostgreSQL language is used. It's bee
 
 SQL Formatter Dependency / Why SQL Formatter and not something pure Python? The comparable Python projects seem idle / no longer maintained.
 
+### %dql --tables
+
+Tables returns the list of tables used by the query, equivalent to:
+
+```
+duckdb.get_table_names("SELECT * FROM xyz")
+```
+
 ## Autocompletion: Work in Progress
 
-There's two different Autocompletion implementations, one for MatcherAPIv2 and the other (pre-ipython 8.6.0) for MatcherAPIv1. The MatcherAPIv2 version is tried first, and if it fails, the MatcherAPIv1 version is loaded. MatcherAPIv1 will not match the entire results of a cell: it's limited to a line by line match.
+There are two different Autocompletion implementations, one for MatcherAPIv2 and the other (pre-ipython 8.6.0) for MatcherAPIv1. The MatcherAPIv2 version is tried first, and if it fails, the MatcherAPIv1 version is loaded. MatcherAPIv1 will not match the entire results of a cell: it's limited to a line by line match.
 
 - Phrase completion: `%dql create <tab>` will show common phrases, such as `CREATE OR REPLACE`
 - Pragma completion: `%dql PRAGMA <tab>` will list available pragma's.

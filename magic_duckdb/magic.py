@@ -127,14 +127,32 @@ class DuckDbMagic(Magics, Configurable):
         type=str,
         action="store",
     )
+    @argument(
+        "-e",
+        "--explain",
+        help="Explain or Explain Analyze",
+        nargs=1,
+        type=str,
+        action="store",
+    )
+    @argument("--tables", help="Return table names", action="store_true")
     @argument("rest", nargs=argparse.REMAINDER)
     def execute(self, line: str = "", cell: str = "", local_ns=None):
         global connection
 
         args = parse_argstring(self.execute, line)
-        # Grab rest of line
+        if args.replace:  # replace {vars} and reparse args
+            ns = get_ipython().user_ns  # type: ignore
+            line = line.format(**ns)  # type: ignore
+            cell = cell.format(**ns) if cell is not None else None  # type: ignore
+            args = parse_argstring(self.execute, line)
+
         rest = " ".join(args.rest)
         query = f"{rest}\n{cell}".strip()
+        if "{" in query:
+            logger.warning(
+                "{ detected in text. Did you mean to use -r to format() {vars}?"
+            )
 
         if args.listtypes:
             return dbwrapper.export_functions
@@ -142,15 +160,11 @@ class DuckDbMagic(Magics, Configurable):
             return connection
         elif args.format:
             return self.format_wrapper(query)
-
         elif args.ai:
             return self.ai_wrapper(False, rest, query)
         elif args.aichat:
             return self.ai_wrapper(False, rest, query)
 
-        if args.replace:
-            # Replace any {var}'s with the string values
-            query = query.format(**get_ipython().user_ns)  # type: ignore
         if args.default_connection:
             connection = dbwrapper.default_connection()
         if args.connection_object:
@@ -158,13 +172,20 @@ class DuckDbMagic(Magics, Configurable):
         if args.connection_string:
             connection = dbwrapper.connect(args.connection_string[0])
         if args.type:
-            export_function = args.type[0]
-            if export_function in dbwrapper.export_functions:
-                self.export_function = export_function
+            if args.type[0] in dbwrapper.export_functions:
+                self.export_function = args.type[0]
             else:
                 raise ValueError(
-                    f"{export_function} not found in {dbwrapper.export_functions}"
+                    f"{args.type[0]} not found in {dbwrapper.export_functions}"
                 )
+        if args.explain:
+            explain_function = args.explain[0]
+            if explain_function not in dbwrapper.explain_functions:
+                raise ValueError(
+                    f"{explain_function} not found in {dbwrapper.explain_functions}"
+                )
+        else:
+            explain_function = None
 
         logger.debug(f"Query = {query}, {len(query)}")
 
@@ -177,10 +198,14 @@ class DuckDbMagic(Magics, Configurable):
             connection = dbwrapper.default_connection()
 
         try:
+            if args.tables:
+                return connection.get_table_names(query)
+
             o = dbwrapper.execute(
                 query_string=query,
                 connection=connection,
                 export_function=self.export_function,
+                explain_function=explain_function,
             )
             if args.output:
                 self.shell.user_ns[args.output[0]] = o  # type: ignore
