@@ -76,8 +76,6 @@ class DuckDbMode:
             j = r.explain()  # type: ignore
             return j
         elif explain_function.startswith("ast"):
-            ## TODO: escape inner sql
-            print(type(query_string))
             r = connection.execute(
                 "select json_serialize_sql($1::varchar)", [query_string]
             )
