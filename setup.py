@@ -16,6 +16,7 @@ setup(
     url="https://github.com/iqmo-org/magic_duckdb",
     author="iqmo",
     author_email="info@iqmo.com",
+    license="BSD-3-Clause",
     classifiers=[],
     keywords="Jupyter, Cell Magic, DuckDB, Line Magic, Magic",
     packages=find_packages(exclude=["tests"]),
