@@ -66,7 +66,7 @@ def draw_graphviz(plan_json: str):
         extra_info = node_json.get("extra_info")
         if extra_info is not None:
             node.properties["extra_info"] = extra_info.strip(" \t\r\n").replace(
-                "\n", "<br/>"
+                "\n", "\\n"
             )
 
         node.properties["result"] = node_json.get("result")
@@ -82,12 +82,12 @@ def draw_graphviz(plan_json: str):
             for k, v in node.properties.items()
             if v is not None and v != ""
         ]
-        propstr = "<br/>".join(props)
+        propstr = "\\n".join(props)
 
         shape = names_to_shapes.get(node.name)
         if shape is None:
             shape = "ellipse"
-        dot.node(f"{node.id}", f"<{node.name}<br/>{propstr}>", weight="10", shape=shape)
+        dot.node(f"{node.id}", f"{node.name}\\n{propstr}", weight="10", shape=shape)
 
         if parent is not None:
             edges.append((parent.id, node.id, {"weight": node_json.get("timing")}))  # type: ignore
