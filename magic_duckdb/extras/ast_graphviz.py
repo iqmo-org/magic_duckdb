@@ -57,7 +57,15 @@ def get_tree(ast_json) -> Tuple[List[Node], List[Tuple[Node, Node]]]:
         else:
             node = get_node(name, parent)
         if isinstance(o, basic_types):
-            node.properties["value"] = o
+            prop = node.properties.get("value")
+            if prop is not None:
+                # Only case where we hit this was column_names
+                # Might need to change if there are other similar
+                # cases where "." isn't the right delimiter
+                node.properties["value"] = f"{prop}.{o}"
+            else:
+                node.properties["value"] = f"{o}"
+
         elif isinstance(o, dict):
             if "type" in o:
                 node.properties["type"] = o["type"]
