@@ -38,7 +38,7 @@ class DuckDbMagic(Magics, Configurable):
     # selected via -t. None = Pandas.
     export_function = None
 
-    def __init__(self, shell):
+    def __init__(self, shell, attr_matches: bool = True):
         Configurable.__init__(self, config=shell.config)
         Magics.__init__(self, shell=shell)
 
@@ -221,9 +221,8 @@ class DuckDbMagic(Magics, Configurable):
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
-    ip = get_ipython()
     if ip is None:
-        raise ValueError("No Ipython found")
+        raise ValueError("No ipython found")
 
     if ENABLE_AUTOCOMPLETE:
         init_completers(ip)
