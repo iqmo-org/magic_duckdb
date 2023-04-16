@@ -21,10 +21,10 @@ jobs:
         run: |
           python -m venv env
           source env/bin/activate
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           python -m pip install pytest build dunamai
-          if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
-          pip install .
+          if [ -f requirements_dev.txt ]; then python -m pip install -r requirements_dev.txt; fi
+          python -m pip install .
       - name: Build
         run: |
           source env/bin/activate
@@ -33,7 +33,7 @@ jobs:
       - name: Test with pytest
         run: |
           source env/bin/activate
-          pytest
+          python -m pytest
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         with:
