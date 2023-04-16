@@ -22,7 +22,7 @@ jobs:
           python -m venv env
           source env/bin/activate
           pip install --upgrade pip
-          python -m pip install pytest build
+          python -m pip install pytest build dunamai
           if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
           pip install .
       - name: Build
