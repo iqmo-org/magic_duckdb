@@ -12,7 +12,8 @@ from IPython.core.magic import (
     no_var_expand,
     needs_local_scope,
 )
-from IPython.core.getipython import get_ipython
+
+# from IPython.core.getipython import get_ipython
 from duckdb import ConnectionException, DuckDBPyConnection
 
 from magic_duckdb.autocomplete.common import init_completers
@@ -143,7 +144,7 @@ class DuckDbMagic(Magics, Configurable):
 
         args = parse_argstring(self.execute, line)
         if args.replace:  # replace {vars} and reparse args
-            ns = get_ipython().user_ns  # type: ignore
+            ns = self.shell.user_ns  # type: ignore
             line = line.format(**ns)  # type: ignore
             cell = cell.format(**ns) if cell is not None else None  # type: ignore
             args = parse_argstring(self.execute, line)

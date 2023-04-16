@@ -39,8 +39,6 @@ def test_co_file():
     ipshell.run_cell("import duckdb")
     ipshell.run_cell("fcon = duckdb.connect(filename)")
 
-    print(ipshell.ev("fcon"))
-
     m.execute(line="-co fcon")
     df = m.execute(line="PRAGMA database_list")
 
