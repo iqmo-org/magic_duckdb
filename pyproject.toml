@@ -18,4 +18,4 @@ ignore = [
 
 [tool.pyright]
     # nothing
-    
+    exclude = ["tests"]
