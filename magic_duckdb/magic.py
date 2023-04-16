@@ -29,9 +29,8 @@ dbwrapper: DuckDbMode = DuckDbMode()
 connection: Optional[DuckDBPyConnection] = None
 
 
-def _get_obj_from_name(name: str) -> Optional[object]:
-    ip = get_ipython()
-    return ip.ev(name) if ip is not None else None
+def _get_obj_from_name(shell, name: str) -> Optional[object]:
+    return shell.ev(name) if shell is not None else None
 
 
 @magics_class
@@ -47,7 +46,7 @@ class DuckDbMagic(Magics, Configurable):
         self.shell.configurables.append(self)  # type: ignore
 
     def connect_by_objectname(self, connection_object):
-        con: DuckDBPyConnection = _get_obj_from_name(connection_object)  # type: ignore
+        con: DuckDBPyConnection = _get_obj_from_name(self.shell, connection_object)  # type: ignore
         if not isinstance(con, DuckDBPyConnection):
             raise ValueError(f"{connection_object} is not a DuckDBPyConnection")
         elif con is None:
@@ -139,6 +138,8 @@ class DuckDbMagic(Magics, Configurable):
     @argument("rest", nargs=argparse.REMAINDER)
     def execute(self, line: str = "", cell: str = "", local_ns=None):
         global connection
+        cell = "" if cell is None else cell
+        line = "" if line is None else line
 
         args = parse_argstring(self.execute, line)
         if args.replace:  # replace {vars} and reparse args
@@ -148,6 +149,7 @@ class DuckDbMagic(Magics, Configurable):
             args = parse_argstring(self.execute, line)
 
         rest = " ".join(args.rest)
+
         query = f"{rest}\n{cell}".strip()
         if "{" in query:
             logger.warning(
