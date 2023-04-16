@@ -1,5 +1,5 @@
 # development / testing only
-duckdb>=0.7.1
+duckdb>=0.7.2dev0
 pandas>=1.5.3
 ipython>=8.0.0
 polars
