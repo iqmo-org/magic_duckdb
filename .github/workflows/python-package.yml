@@ -26,6 +26,7 @@ jobs:
           if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
           pip install .
       - name: Build
+        run: |
           source env/bin/activate
           python -m build --wheel
       - name: Test with pytest
