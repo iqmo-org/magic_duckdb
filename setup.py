@@ -10,7 +10,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="magic_duckdb",
-    version=Version.from_any_vcs().serialize(),
+    version=Version.from_git().serialize(format="v{base}dev{distance}.{commit}"),
     description="Jupyter Cell and Line Magics for DuckDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
