@@ -22,19 +22,20 @@ jobs:
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install dunamai
+          python -m pip install --user dunamai
           echo version=\"`dunamai from git --format "v{base}dev{distance}.{commit}" `\" > magic_duckdb/_version.py
+          cat magic_duckdb/_version.py
       - name: Install dependencies and build
         run: |
           source env/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install pytest build
-          if [ -f requirements_dev.txt ]; then python -m pip install -r requirements_dev.txt; fi
+          python -m pip install --user pytest
+          if [ -f requirements_dev.txt ]; then python -m pip install --user -r requirements_dev.txt; fi
           python -m pip install .
       - name: Build
         run: |
           source env/bin/activate
-          python -m pip install
+          python -m pip install --user build
           python -m build --wheel
       - name: Test with pytest
         run: |
