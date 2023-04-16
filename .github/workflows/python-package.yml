@@ -17,18 +17,24 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies and build
+      - name: Set version with dunmai
         run: |
           python -m venv env
           source env/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install pytest build dunamai
+          python -m install dunamai
+          echo version=\"`dunamai from git --format "v{base}dev{distance}.{commit}" `\" > magic_duckdb/_version.py
+      - name: Install dependencies and build
+        run: |
+          source env/bin/activate
+          python -m pip install --upgrade pip
+          python -m pip install pytest build
           if [ -f requirements_dev.txt ]; then python -m pip install -r requirements_dev.txt; fi
           python -m pip install .
       - name: Build
         run: |
           source env/bin/activate
-          python -m pip install dunamai
+          python -m pip install
           python -m build --wheel
       - name: Test with pytest
         run: |

@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
-from dunamai import Version
+from magic_duckdb import _version
 
 here = path.abspath(path.dirname(__file__))
 
@@ -10,7 +10,7 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="magic_duckdb",
-    version=Version.from_git().serialize(format="v{base}dev{distance}.{commit}"),
+    version=_version.__version__,
     description="Jupyter Cell and Line Magics for DuckDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
