@@ -4,4 +4,3 @@ pandas>=1.5.3
 ipython>=8.0.0
 polars
 pyarrow
-dunamai

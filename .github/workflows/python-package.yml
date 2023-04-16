@@ -28,6 +28,7 @@ jobs:
       - name: Build
         run: |
           source env/bin/activate
+          python -m pip install dunamai
           python -m build --wheel
       - name: Test with pytest
         run: |
