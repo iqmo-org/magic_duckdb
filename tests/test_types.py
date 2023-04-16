@@ -29,7 +29,7 @@ def test_explains():
     ipshell = create_shell()
 
     for e in duckdb_mode.DuckDbMode.explain_functions:
-        if "draw" in e:
+        if "draw" not in e:
             er = ipshell.run_cell(f"%dql -e {e} select * from range(10)")
             assert er.error_in_exec is None
             o = er.result
