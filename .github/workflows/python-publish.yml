@@ -16,21 +16,41 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python
+        with: # needed for tags for dunamai
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
-          python-version: "3.9"
+          python-version: ${{ matrix.python-version }}
+      - name: Set version with dunamai
+        run: |
+          #python -m venv env
+          #source env/bin/activate
+          pip install --upgrade pip
+          pip install --user dunamai
+          echo __version__=\"`dunamai from git --format "{base}" `\" > magic_duckdb/_version.py
+          cat magic_duckdb/_version.py
+          git tag
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build
-      - name: Build package
-        run: python -m build --wheel
+          python -m pip install --user pytest
+          if [ -f requirements_dev.txt ]; then pip install --user -r requirements_dev.txt; fi
+          pip install --user .
+      - name: Test with pytest
+        run: |
+          pytest
+      - name: Build
+        run: |
+          pip wheel --no-deps -w dist .
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         with:
