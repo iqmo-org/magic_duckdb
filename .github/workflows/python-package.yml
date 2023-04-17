@@ -31,8 +31,6 @@ jobs:
           pip install --upgrade pip
           pip install --user pytest
           if [ -f requirements_dev.txt ]; then pip install --user -r requirements_dev.txt; fi
-          echo Installing .
-          pip install .
           echo Building wheels
           pip install build
           python -m build --wheel
