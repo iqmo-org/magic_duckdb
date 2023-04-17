@@ -7,6 +7,7 @@
 # documentation.
 
 name: Build and Upload Python Package
+# TODO: This should just be an upload step from the already built, tagged assets.
 
 on:
   release:
@@ -37,6 +38,9 @@ jobs:
           pip install --upgrade pip
           pip install --user dunamai
           echo __version__=\"`dunamai from git --format "{base}" `\" > magic_duckdb/_version.py
+          echo __commit__=\"`git rev-parse HEAD`\" >> magic_duckdb/_version.py
+          echo __commit_short__=\"`git rev-parse --short HEAD`\" >> magic_duckdb/_version.py
+          # display information for debugging
           cat magic_duckdb/_version.py
           git tag
       - name: Install dependencies
