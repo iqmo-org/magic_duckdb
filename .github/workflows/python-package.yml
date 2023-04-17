@@ -19,27 +19,27 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Set version with dunmai
         run: |
-          python -m venv env
-          source env/bin/activate
+          #python -m venv env
+          #source env/bin/activate
           python -m pip install --upgrade pip
           python -m pip install --user dunamai
           echo version=\"`dunamai from git --format "v{base}dev{distance}.{commit}" `\" > magic_duckdb/_version.py
           cat magic_duckdb/_version.py
       - name: Install dependencies and build
         run: |
-          source env/bin/activate
+          #source env/bin/activate
           python -m pip install --upgrade pip
           python -m pip install --user pytest
           if [ -f requirements_dev.txt ]; then python -m pip install --user -r requirements_dev.txt; fi
           python -m pip install .
       - name: Build
         run: |
-          source env/bin/activate
+          #source env/bin/activate
           python -m pip install --user build
           python -m build --wheel
       - name: Test with pytest
         run: |
-          source env/bin/activate
+          #source env/bin/activate
           python -m pytest
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
