@@ -1,16 +1,19 @@
 from setuptools import setup, find_packages
 from codecs import open
 from os import path
-from . import _version  # type: ignore
 
 here = path.abspath(path.dirname(__file__))
 
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
+with open("magic_duckdb/_version.py", "r") as file:
+    code = file.read()
+    exec(code)
+
 setup(
     name="magic_duckdb",
-    version=_version.__version__,
+    version=__version__,  # type: ignore # noqa
     description="Jupyter Cell and Line Magics for DuckDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
