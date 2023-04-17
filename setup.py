@@ -10,10 +10,11 @@ with open(path.join(here, "README.md"), encoding="utf-8") as f:
 with open("magic_duckdb/_version.py", "r") as file:
     code = file.read()
     exec(code)
+    _version = __version__  # type: ignore # noqa
 
 setup(
     name="magic_duckdb",
-    version=__version__,  # type: ignore # noqa
+    version=_version,  # type: ignore # noqa
     description="Jupyter Cell and Line Magics for DuckDB",
     long_description=long_description,
     long_description_content_type="text/markdown",
