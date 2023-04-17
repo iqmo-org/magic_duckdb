@@ -27,7 +27,7 @@ jobs:
           #source env/bin/activate
           pip install --upgrade pip
           pip install --user dunamai
-          echo __version__=\"`dunamai from git --format "{base}.dev{distance}" `\" > magic_duckdb/_version.py
+          echo __version__=\"`dunamai from git --bump --format "{base}.dev{distance}" `\" > magic_duckdb/_version.py
           echo __commit__=\"`git rev-parse HEAD`\" >> magic_duckdb/_version.py
           echo __commit_short__=\"`git rev-parse --short HEAD`\" >> magic_duckdb/_version.py
           # display information for debugging
