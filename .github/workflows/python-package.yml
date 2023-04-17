@@ -39,6 +39,9 @@ jobs:
           python -m pip install --user pytest
           if [ -f requirements_dev.txt ]; then pip install --user -r requirements_dev.txt; fi
           pip install --user .
+      - name: Ruff Check
+        run: |
+          ruff check magic_duckdb --config pyproject.toml
       - name: Test with pytest
         run: |
           pytest
