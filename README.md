@@ -2,6 +2,30 @@
 
 iPython Cell %%dql and Line %dql magics for DuckDB, for both Jupyter and VSCode
 
+## Motivation
+
+magic_duckdb was created to:
+
+- Expose duckdb's functionality with minimal overhead and complexity
+- Make it easier to use duckdb in Jupyter notebooks
+- Bundle useful features, like using OpenAI to improve SQL, sql formatting (beautifying) and explain analyze graphics
+- Provide a starting point to add other useful features with minimal complexity
+
+### Why not other projects like Jupysql or ipython-sql?
+
+The %sql magics are great, but are intended for breadth (supporting many types of databases), not depth (deep integration and optimizations for specific databases). As shown below (Performance Comparison), this breadth comes at a performance cost.
+
+## Simplicity
+
+The goal of this project was to provide a minimal line & cell magics for DuckDB in Jupyter notebooks with minimal dependencies and as simply as possible.
+
+The code is concentrated in two files with under 300 lines of code. Goal is to keep this code short and simple.
+
+- magic.py: Barebones cell and line magic that parses arguments, and executes statements
+- duckdb_mode.py: execute() calls the appropriate method based on the user selected output type.
+
+There are also separate files for drawing explain analyze graphs and formatting (beautifying) SQL.
+
 ## Quick Start
 
 ```
@@ -10,7 +34,7 @@ iPython Cell %%dql and Line %dql magics for DuckDB, for both Jupyter and VSCode
 %dql select * from range(100)
 ```
 
-## Usage:
+## Usage
 
 ```
 Connection:
@@ -39,88 +63,24 @@ Other:
 -e <explain_mode>: Display the explain plan, or explain analyze, or AST
 ```
 
-See notebooks/examples.ipynb for complete usage examples.
+See [notebooks](https://github.com/iqmo-org/magic_duckdb/tree/main/notebooks) for usage examples.
 
-## Motivation
+## Usage Details
 
-magic_duckdb was created to:
-
-- Expose duckdb's functionality with minimal overhead and complexity
-- Make it easier to use duckdb in Jupyter notebooks
-- Bundle useful features, like using OpenAI to improve SQL, sql formatting (beautifying) and explain analyze graphics
-- Provide a starting point to add other useful features with minimal complexity
-
-### Why not other projects like Jupysql or ipython-sql?
-
-The %sql magics are great, but are intended for breadth (supporting many types of databases), not depth (deep integration and optimizations for specific databases). As shown below (Performance Comparison), this breadth comes at a performance cost.
-
-## Simplicity
-
-The goal of this project was to provide a minimal line & cell magics for DuckDB in Jupyter notebooks with minimal dependencies and as simply as possible.
-
-The code is concentrated in two files with under 300 lines of code. Goal is to keep this code short and simple.
-
-- magic.py: Barebones cell and line magic that parses arguments, and executes statements
-- duckdb_mode.py: execute() calls the appropriate method based on the user selected output type.
-
-There are also separate files for drawing explain analyze graphs and formatting (beautifying) SQL.
-
-## Fun Stuff / Extras
-
-- SQL Formatter: Using the javascript sql-formatter project. Requires node/npx.
-- Graphical Explain Analyze: Formats complex explain analyze results using Graphviz. Requires both graphviz python module and graphviz binaries in your PATH.
-- AI Suggestions and Fixing: -ai and -aichat route the requests to OpenAI. Requires an OpenAI developer key.
-
-## -t [df | arrow | pl | relation | show]
-
-Returns the result in the selected type.
-
-This is comparable to the following Python code:
+- `%dql -t [df | arrow | pl | relation | show] <query>`: Equivalent to - `connection.sql(query).<type>()`
+- `%dql -e [explain | explain_analyze_tree | explain_analyze_json | explain_analyze_draw | analyze | ast_json | ast_tree | ast_draw] <query>`:
+  - `explain` is equivalent to `connection.sql(query).explain()`
+  - `explain_analyze_*` options enable profiling (`PRAGMA enable_profiling`), and use `connection.sql(query).explain(type='analyze')`
+  - `explain_analyze_draw` requires [graphviz](https://graphviz.org/) to be installed on your system, and "dot" or "dot.exe" must be in your PATH or added via `magic.explain_analyze_graphviz.dot_path = 'path_to_dot'`. The graphviz python module must also be installed: `pip install graphviz`
+  - The AST options use [json_serialize_sql](https://github.com/duckdb/duckdb/discussions/6922) to describe the SQL. `ast_json` displays the raw json result, `ast_tree` displays an indented tree, and `ast_draw` uses graphviz to draw a graphical version of the tree
+- `%dql --format <query>` uses [sql-formatter](https://github.com/sql-formatter-org/sql-formatter). This is a javascript library, so it needs to be installed separately, although it's executed via npx so should be fine as long as you have npx / node in your path.
+- `%dql --tables <query>` returns the list of tables used by the query, equivalent to: `duckdb.get_table_names("SELECT * FROM xyz")`
+- `%dql [-ai | -aichat] fix <query>` passes the current schema to OpenAI and askes OpenAI to "fix" the query. An OpenAI developer key is required.
 
 ```
-connection.sql(query).<type>()
-```
-
-## -e [explain | explain_analyze_tree | explain_analyze_json | explain_analyze_draw | analyze | ast_json | ast_tree | ast_draw]
-
-Several modes are available for displaying the explain, explain analyze or ast (via json_serialize_sql) output.
-
-- explain_analyze_tree returns a text-based display of the explain_analyze_json output
-- explain_analyze_draw is similar but uses GraphViz for display, which handles large graphs better
-- ast uses [json_serialize_sql](https://github.com/duckdb/duckdb/discussions/6922) to output the AST of the query
-- ast_draw passes the json through graphviz to generate a graphical version
-
-```
-connection.sql("PRAGMA enable_profiling=[json | query_tree]")
-r = connection.sql(query_string)
-t = r.explain(type= "analyze")
-return t
-```
-
-#### explain_analyze_draw via Graphviz
-
-[graphviz](https://graphviz.org/) must be installed on your system, and "dot" or "dot.exe" must be in your PATH. If it's installed, but not in PATH, set the path with:
-
-```
-magic.explain_analyze_graphviz.dot_path = 'path_to_dot'
-```
-
-Graphing Dependency / Why GraphViz? GraphViz was quick, simple, and has the best layout engines available. [D2](https://github.com/terrastruct/d2) is a promising option but in either case, requires an external dependency, but I tried to find a comparable pure Python library and failed.
-
-### %dql --format [experimental]
-
-SQL Formatting uses [sql-formatter](https://github.com/sql-formatter-org/sql-formatter). This is a javascript library, so it needs to be installed separately, although it's executed via npx so should be fine as long as you have npx / node in your path.
-
-It does not have a duckdb language, so the PostgreSQL language is used. It's been good enough, but some queries might not format well until/unless they add a duckdb mode.
-
-SQL Formatter Dependency / Why SQL Formatter and not something pure Python? The comparable Python projects seem idle / no longer maintained.
-
-### %dql --tables
-
-Tables returns the list of tables used by the query, equivalent to:
-
-```
-duckdb.get_table_names("SELECT * FROM xyz")
+            # to set openai key
+            from magic_duckdb.extras import sql_ai
+            sql_ai.OPENAI_KEY = openai_key
 ```
 
 ## Autocompletion: Work in Progress
