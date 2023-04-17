@@ -1,19 +1,19 @@
 # magic_duckdb
 
-iPython Cell %%dql and Line %dql magics for DuckDB, for both Jupyter and VSCode
+DuckDB Cell (%%dql) and Line (%dql) Magics for Jupyter and VSCode
 
 ## Motivation
 
 magic_duckdb was created to:
 
-- Expose duckdb's functionality with minimal overhead and complexity
-- Make it easier to use duckdb in Jupyter notebooks
+- Provide simple cell/line magics with minimal code and zero dependencies
+- Match performance of DuckDB python API
+- Be a simple starting point to add other useful features with minimal complexity
 - Bundle useful features, like using OpenAI to improve SQL, sql formatting (beautifying) and explain analyze graphics
-- Provide a starting point to add other useful features with minimal complexity
 
-### Why not other projects like Jupysql or ipython-sql?
+### Why not the %sql magics (jupysql or ipython-sql)?
 
-The %sql magics are great, but are intended for breadth (supporting many types of databases), not depth (deep integration and optimizations for specific databases). As shown below (Performance Comparison), this breadth comes at a performance cost.
+The %sql magics are great, but they do carry a lot of dependencies and incur a significant performance overhead (see Performance Comparison below). They also don't provide certain DuckDB specific features, like exporting directly to arrow(), controlling the DuckDB connections, or
 
 ## Simplicity
 
@@ -44,23 +44,27 @@ Connection:
     con = duckdb.connect("somefile.db")
     %dql -co con
 -d: Use the duckdb.default_connection
---getcon: Get the current connection
+-g | --getcon: Get the current connection
     con = %dql --getcon
 
-Types:
---listtypes: Returns a list of available output types
+Modes:
 -t <type> [default: df]: Selects the type for this and all future requests.
+-e <explain_mode>: Display the explain plan, or explain analyze, or AST
 
+Options:
+-l | --listtypes: Returns a list of available output types, for -t
+-r: Replace {var} with variable strings from the environment using .format(). Note: not a f-string: {var} is not evaluated.
+    var1 = "table1"
+    %dql -r select * from {var1}, table2
+-o <var>: Stores the resulting output in a variable named <var>
+
+Extras:
+--tables: Returns tables used by the query
+-f: Format the string using npx sql-formatter
 Other:
 -ai / -aichat: Route request to OpenAI
-    %%dql -ai Fix my sql
-    ....
+    %dql -ai Fix selct star frm mytable
 
--r: Replace {var} with variable strings from the environment
-    var1 = "some string"
-    %dql -r select * from {var1} join table
-
--e <explain_mode>: Display the explain plan, or explain analyze, or AST
 ```
 
 See [notebooks](https://github.com/iqmo-org/magic_duckdb/tree/main/notebooks) for usage examples.
@@ -136,50 +140,26 @@ To silence a cell, you can stack %%capture:
 
 The jupysql/sql-alchemy/duckdb-engine %sql magic was surprisingly slow when compared to magic_duckdb or duckdb. I didn't spend a lot of time evaluating this, so please do your own evaluation: my priority was keeping magic_duckdb simple by using duckdb directly.
 
-## Versions
+### Versions
 
-- SQLAlchemy 1.4.47
-- DuckDb: 0.7.2dev1256
+- SQLAlchemy 2.0.9
+- DuckDb: 0.7.2dev1671
 - duckdb-engine: 0.7.0
-- jupysql: 0.6.6
+- jupysql: 0.7.0
 
-## 1 million rows
+### Test Setup
 
-```
-# Test setup
-# Create a semi-large dataframe
-from pandas import DataFrame
-import numpy as np
-simpledf = DataFrame(np.random.randn(1000000,20))
-```
+See [benchmarking.ipynb](https://github.com/iqmo-org/magic_duckdb/blob/main/notebooks/benchmarking.ipynb) for the test code.
 
-```
-%load_ext simplemagic
-%timeit odf = %dql select * from simpledf
-```
+### Results
 
-> 288 ms ± 24.7 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
+| # Rows | duckdb (baseline) | magic_duckdb (%dql) | jupysql+SQLAlchemy (%sql) |
+| :----- | ----------------: | ------------------: | ------------------------: |
+| 10M    |            3.03 s |              2.91 s |                    50.2 s |
+| 1M     |            310 ms |              302 ms |                    5.44 s |
+| 100K   |             56 ms |               53 ms |                    844 ms |
+| 10K    |             10 ms |               10 ms |                    413 ms |
+| 1K     |             12 ms |               11 ms |                    388 ms |
+| 1      |            7.5 ms |              7.8 ms |                    363 ms |
 
-```
-# %pip install duckdb duckdb_engine jupysql
-%load_ext sql
-%sql duckdb:///:memory:
-%config SqlMagic.autopandas = True
-
-%timeit odf = %sql select * from simpledf
-```
-
-> 6.69 s ± 806 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
-
-## 1 Row
-
-magic_duckdb:
-
-> 7.84 ms ± 330 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
-
-jupysql:
-
-> 7.29 ms ± 126 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
-
-<br/>
-Copyright (c) 2023 Iqmo Corporation
+Copyright &copy; 2023 Iqmo Corporation
