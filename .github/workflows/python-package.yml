@@ -32,8 +32,9 @@ jobs:
           pip install --user pytest
           if [ -f requirements_dev.txt ]; then pip install --user -r requirements_dev.txt; fi
           echo Building wheels
-          pip install build
-          python -m build --wheel
+          pip wheel --no-deps -w dist .
+          # TODO: Clean this up
+          pip install dist/*
       - name: Test with pytest
         run: |
           #source env/bin/activate
