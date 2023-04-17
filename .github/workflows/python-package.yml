@@ -29,13 +29,9 @@ jobs:
         run: |
           #source env/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install --user pytest
+          python -m pip install --user pytest build
           if [ -f requirements_dev.txt ]; then python -m pip install --user -r requirements_dev.txt; fi
           python -m pip install .
-      - name: Build
-        run: |
-          #source env/bin/activate
-          python -m pip install --user build
           python -m build --wheel
       - name: Test with pytest
         run: |
