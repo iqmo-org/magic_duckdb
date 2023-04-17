@@ -28,6 +28,7 @@ jobs:
           echo __version__=\"`dunamai from git --format "{base}.dev{distance}" `\" > magic_duckdb/_version.py
           # first copy is for setup, second copy is for build
           cat magic_duckdb/_version.py
+          git tag
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
