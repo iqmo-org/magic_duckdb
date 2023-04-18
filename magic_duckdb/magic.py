@@ -130,7 +130,7 @@ class DuckDbMagic(Magics, Configurable):
     @argument(
         "-e",
         "--explain",
-        help="Explain or Explain Analyze",
+        help="Explain or Explain Analyze or AST",
         nargs=1,
         type=str,
         action="store",
