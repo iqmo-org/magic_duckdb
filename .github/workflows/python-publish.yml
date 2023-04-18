@@ -6,8 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Build and Upload Python Package
-# TODO: This should just be an upload step from the already built, tagged assets.
+name: Publish
 
 on:
   release:
@@ -33,16 +32,15 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Set version with dunamai
         run: |
-          #python -m venv env
-          #source env/bin/activate
           pip install --upgrade pip
           pip install --user dunamai
-          echo __version__=\"`dunamai from git --format "{base}" `\" > magic_duckdb/_version.py
-          echo __commit__=\"`git rev-parse HEAD`\" >> magic_duckdb/_version.py
-          echo __commit_short__=\"`git rev-parse --short HEAD`\" >> magic_duckdb/_version.py
+          export VFILE=$(basename ${{ github.repository }})/_version.py
+
+          echo __version__=\"`dunamai from git `\" > $VFILE
+          echo __commit__=\"`git rev-parse HEAD`\" >> $VFILE
+          echo __commit_short__=\"`git rev-parse --short HEAD`\" >> $VFILE
           # display information for debugging
-          cat magic_duckdb/_version.py
-          git tag
+          cat $VFILE
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -59,6 +57,15 @@ jobs:
       - name: Build
         run: |
           pip wheel --no-deps -w dist .
+      - name: Upload Assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PATMDG }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: dist/*.whl
+          asset_name: wheels.zip
+          asset_content_type: application/zip
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
         with:
