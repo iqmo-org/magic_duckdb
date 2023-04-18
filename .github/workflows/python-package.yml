@@ -41,6 +41,7 @@ jobs:
           pip install --user .
       - name: Ruff Check
         run: |
+          pip install ruff
           ruff check magic_duckdb --config pyproject.toml
       - name: Test with pytest
         run: |
