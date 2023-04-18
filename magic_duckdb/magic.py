@@ -150,12 +150,7 @@ class DuckDbMagic(Magics, Configurable):
             args = parse_argstring(self.execute, line)
 
         rest = " ".join(args.rest)
-
         query = f"{rest}\n{cell}".strip()
-        if "{" in query:
-            logger.warning(
-                "{ detected in text. Did you mean to use -r to format() {vars}?"
-            )
 
         if args.listtypes:
             return dbwrapper.export_functions
