@@ -35,8 +35,15 @@ jobs:
       - name: Push - Bump Dev Version
         if: github.event_name == 'push' && ! startsWith(github.event.ref, 'refs/tags/v')
         run: |
-          # Since this is a push, append dev0 to separate from a separate tag event
-          export RVERSION=$(dunamai from git --bump --format "{base}.dev{distance}")
+          export RVERSION=$(dunamai from git --bump --no-metadata")
+
+          # Experiment, if we see conflicts. Append dev0 to distinguish from a separate tag event
+          # export RDISTANCE=$(dunamai from git --bump --format {distance})
+          # if [ -z $RDISTANCE ]
+          # then
+          #   export RVERSION=$RVERSION.dev0
+          # fi
+
           echo "RVERSION=$RVERSION" >> $GITHUB_ENV
       - name: Tag v* - Unbumped Version
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
