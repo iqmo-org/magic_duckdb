@@ -46,6 +46,7 @@ Connection:
 -d: Use the duckdb.default_connection
 -g | --getcon: Get the current connection
     con = %dql --getcon
+--close: Close current connection
 
 Modes:
 -t <type> [default: df]: Selects the type for this and all future requests.
