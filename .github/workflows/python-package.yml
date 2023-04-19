@@ -53,8 +53,8 @@ jobs:
           git tag
           dunamai from git --debug
 
-          #echo "RVERSION=$(dunamai from git)" >> $GITHUB_ENV
-          echo "RVERSION=${{ github.ref }}" >> $GITHUB_ENV
+          echo "RVERSION=$(dunamai from git)" >> $GITHUB_ENV
+          #echo "RVERSION=${{ github.ref }}" >> $GITHUB_ENV
       - name: Create Version File
         run: |
           export VFILE=$(basename ${{ github.repository }})/_version.py
