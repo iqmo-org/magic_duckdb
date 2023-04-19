@@ -35,7 +35,7 @@ jobs:
       - name: Push - Bump Dev Version
         if: github.event_name == 'push' && ! startsWith(github.event.ref, 'refs/tags/v')
         run: |
-          export RVERSION=$(dunamai from git --bump --no-metadata")
+          export RVERSION=$(dunamai from git --bump --no-metadata)
 
           # Experiment, if we see conflicts. Append dev0 to distinguish from a separate tag event
           # export RDISTANCE=$(dunamai from git --bump --format {distance})
