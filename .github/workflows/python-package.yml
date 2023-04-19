@@ -45,18 +45,19 @@ jobs:
           # fi
 
           echo "RVERSION=$RVERSION" >> $GITHUB_ENV
-      - name: Tag v* - Unbumped Version
+      - name: Tag v* - Use the tag as is, without the v
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
         run: |
           # Debug info
           echo ${{ github.ref }}
+          echo ${GITHUB_REF#refs/tags/v}"
           git tag
           echo dunamai: 
           dunamai from git --debug
           echo dunamai latest:
           dunamai from git --debug --latest-tag
-          echo "RVERSION=$(dunamai from git --latest-tag)" >> $GITHUB_ENV
-          #echo "RVERSION=${{ github.ref }}" >> $GITHUB_ENV
+          #echo "RVERSION=$(dunamai from git --latest-tag)" >> $GITHUB_ENV
+          echo "RVERSION=${GITHUB_REF#refs/tags/v}"" >> $GITHUB_ENV
       - name: Create Version File
         run: |
           export VFILE=$(basename ${{ github.repository }})/_version.py
