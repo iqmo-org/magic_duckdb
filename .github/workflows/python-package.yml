@@ -50,7 +50,7 @@ jobs:
         run: |
           # Debug info
           echo ${{ github.ref }}
-          echo ${GITHUB_REF#refs/tags/v}"
+          echo ${GITHUB_REF#refs/tags/v}
           git tag
           echo dunamai: 
           dunamai from git --debug
