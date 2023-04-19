@@ -49,7 +49,7 @@ jobs:
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
         run: |
           # Debug info
-          echo ${{ github.event.ref }}
+          echo ${{ github.ref }}
           git tag
           dunamai from git --debug
 
