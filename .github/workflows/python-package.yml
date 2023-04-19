@@ -21,10 +21,17 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Cache pip dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements_dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install --user dunamai pytest
+          if [ -f requirements_dev.txt ]; then pip install --user -r requirements_dev.txt; fi
       - name: Push - Bump Dev Version
         if: github.event_name == 'push' && ! startsWith(github.event.ref, 'refs/tags/v')
         run: |
@@ -44,11 +51,9 @@ jobs:
           cat $VFILE
       - name: Install dependencies
         run: |
-          if [ -f requirements_dev.txt ]; then pip install --user -r requirements_dev.txt; fi
           pip install --user .
       - name: Ruff Check
         run: |
-          pip install ruff
           ruff check magic_duckdb --config pyproject.toml
       - name: Test with pytest
         run: |
