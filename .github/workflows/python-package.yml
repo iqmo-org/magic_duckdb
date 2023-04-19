@@ -1,4 +1,4 @@
-name: Any Push -> TestPyPi. Tag v* -> Publish
+name: Any Push>TestPyPi or Tag v*>Release+PYPI
 
 on:
   push:
@@ -37,10 +37,11 @@ jobs:
           echo "RVERSION=$(dunamai from git)" >> $GITHUB_ENV
       - name: Create Version File
         run: |
-          echo __version__=\"${{ env.RVERSION }}\" > magic_duckdb/_version.py
-          echo __commit__=\"`git rev-parse HEAD`\" >> magic_duckdb/_version.py
-          echo __commit_short__=\"`git rev-parse --short HEAD`\" >> magic_duckdb/_version.py
-          cat magic_duckdb/_version.py
+          export VFILE=$(basename ${{ github.repository }})/_version.py
+          echo __version__=\"${{ env.RVERSION }}\" > $VFILE
+          echo __commit__=\"`git rev-parse HEAD`\" >> $VFILE
+          echo __commit_short__=\"`git rev-parse --short HEAD`\" >> $VFILE
+          cat $VFILE
       - name: Install dependencies
         run: |
           if [ -f requirements_dev.txt ]; then pip install --user -r requirements_dev.txt; fi
@@ -62,3 +63,31 @@ jobs:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
+      - name: Release Create Draft
+        id: create_release
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PATMDG }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: true
+      - name: Release Upload Assets
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.PATMDG }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: wheels.zip
+          asset_name: wheels.zip
+          asset_content_type: application/zip
+      - name: Publish package
+        # TODO: Defer to manual release.published event
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

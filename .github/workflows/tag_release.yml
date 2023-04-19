@@ -1,0 +1,44 @@
+# This is a helper to create a release at the appropriate RC#.
+# You can also just tag the release manually
+
+name: Tag Release X.Y
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9"]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # needed for tags for dunamai
+          token: ${{ secrets.PATMDG }} # needed to create tag and trigger a new workflow
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Get Version
+        run: |
+
+          pip install --upgrade pip
+          pip install --user dunamai
+
+          export RVERSION=$(dunamai from git --format "{base}")
+          echo Version: $RVERSION
+
+          # store in GITHUB_ENV, to access. Prefix with v
+          echo "RVERSION=$RVERSION" >> $GITHUB_ENV
+
+      - name: Create tag
+        run: |
+          git config user.name "Git Action"
+          git config user.email "gitaction@iqmo.com"
+          git tag v${{ env.RVERSION }} -m "Generated from GH Action"
+          git push origin v${{ env.RVERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.PATMDG }}
