@@ -61,6 +61,7 @@ jobs:
       - name: Build
         run: |
           pip wheel --no-deps -w dist .
+          zip wheels.zip dist/*
       - name: Push - Publish testpypi
         if: github.event_name == 'push' && ! startsWith(github.event.ref, 'refs/tags/v')
         uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
