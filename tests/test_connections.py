@@ -49,3 +49,22 @@ def test_co_file():
     o = m.execute(line="-g")
     df2 = o.execute("PRAGMA database_list").df()
     assert df2.at[0, "file"].endswith(fname)
+
+
+def test_close():
+    ipshell = InteractiveShellEmbed()
+    m = DuckDbMagic(shell=ipshell)
+
+    # No exception here
+    m.execute(line="--close")
+
+    fname = "test.db"
+    m.execute(line=f"-cn {fname}")
+    df = m.execute(line="PRAGMA database_list")
+
+    assert len(df) == 1
+    assert df.at[0, "file"].endswith(fname)
+
+    m.execute(line="--close")
+    df2 = m.execute(line="PRAGMA database_list")
+    assert df2.at[0, "name"] == "memory"

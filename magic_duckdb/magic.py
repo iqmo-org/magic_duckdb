@@ -136,6 +136,7 @@ class DuckDbMagic(Magics, Configurable):
         action="store",
     )
     @argument("--tables", help="Return table names", action="store_true")
+    @argument("--close", help="Close database connection", action="store_true")
     @argument("rest", nargs=argparse.REMAINDER)
     def execute(self, line: str = "", cell: str = "", local_ns=None):
         global connection
@@ -162,7 +163,12 @@ class DuckDbMagic(Magics, Configurable):
             return self.ai_wrapper(False, rest, query)
         elif args.aichat:
             return self.ai_wrapper(False, rest, query)
-
+        elif args.close:
+            if connection is not None:
+                try:
+                    connection.close()
+                finally:
+                    connection = None
         if args.default_connection:
             connection = dbwrapper.default_connection()
         if args.connection_object:
