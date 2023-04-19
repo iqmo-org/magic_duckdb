@@ -51,9 +51,11 @@ jobs:
           # Debug info
           echo ${{ github.ref }}
           git tag
+          echo dunamai: 
           dunamai from git --debug
-
-          echo "RVERSION=$(dunamai from git)" >> $GITHUB_ENV
+          echo dunamai latest:
+          dunamai from git --debug --latest-tag
+          echo "RVERSION=$(dunamai from git --latest-tag)" >> $GITHUB_ENV
           #echo "RVERSION=${{ github.ref }}" >> $GITHUB_ENV
       - name: Create Version File
         run: |
