@@ -2,7 +2,7 @@ name: Any Push>TestPyPi or Tag v*>Release+PYPI
 
 on:
   push:
-    #branches: ["main"]
+    branches: ["main"]
     tags:
       - "v*"
 
