@@ -60,6 +60,7 @@ class DuckDbMode:
             execute_db("PRAGMA enable_profiling=query_tree", connection, True)
             r = execute_db(query_string, connection, False)
             t = r.explain(type="analyze")  # type: ignore
+            print(t)
             return t
         elif explain_function == "explain_analyze_json":
             execute_db("PRAGMA enable_profiling=json", connection, True)
@@ -74,6 +75,7 @@ class DuckDbMode:
         elif explain_function == "explain":
             r = execute_db(query_string, connection, False)
             j = r.explain()  # type: ignore
+            print(j)
             return j
         elif explain_function.startswith("ast"):
             r = connection.execute(
