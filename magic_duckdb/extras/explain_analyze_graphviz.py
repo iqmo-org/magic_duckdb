@@ -76,7 +76,8 @@ def draw_graphviz(plan_json: str):
             timing / total_time if timing is not None and total_time is not None else 0
         )
 
-        node.properties["timing"] = f"{timing:.2f} ({timing_percent:.0%})"
+        if timing is not None:
+            node.properties["timing"] = f"{timing:.2f} ({timing_percent:.0%})"
         props = [
             f"{k}={v}" if k != "extra_info" else v
             for k, v in node.properties.items()
