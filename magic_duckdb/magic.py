@@ -1,6 +1,6 @@
 import logging
 import argparse
-from typing import Optional
+from typing import Optional, Dict
 
 from traitlets.config.configurable import Configurable
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
@@ -15,7 +15,7 @@ from IPython.core.magic import (
 
 # from IPython.core.getipython import get_ipython
 from duckdb import ConnectionException, DuckDBPyConnection
-
+from magic_duckdb.extras import jinja_template
 from magic_duckdb.autocomplete.common import init_completers
 from magic_duckdb.duckdb_mode import DuckDbMode
 
@@ -82,12 +82,6 @@ class DuckDbMagic(Magics, Configurable):
     @cell_magic("dql")
     @magic_arguments()
     @argument("-l", "--listtypes", help="List the available types", action="store_true")
-    @argument(
-        "-r",
-        "--replace",
-        help="Replace any {var}'s from environment",
-        action="store_true",
-    )
     @argument("-g", "--getcon", help="Return current connection", action="store_true")
     @argument(
         "-d", "--default_connection", help="Use default connection", action="store_true"
@@ -137,21 +131,28 @@ class DuckDbMagic(Magics, Configurable):
     )
     @argument("--tables", help="Return table names", action="store_true")
     @argument("--close", help="Close database connection", action="store_true")
+    @argument("-j", "--jinja2", help="Apply Jinja2 Template", action="store_true")
+    @argument(
+        "-p",
+        "--param",
+        dest="queryparams",
+        help="Apply Jinja2 Template",
+        action="append",
+    )
     @argument("rest", nargs=argparse.REMAINDER)
     def execute(self, line: str = "", cell: str = "", local_ns=None):
         global connection
         cell = "" if cell is None else cell
         line = "" if line is None else line
+        user_ns: Dict[str, object] = self.shell.user_ns  # type: ignore
 
         args = parse_argstring(self.execute, line)
-        if args.replace:  # replace {vars} and reparse args
-            ns = self.shell.user_ns  # type: ignore
-            line = line.format(**ns)  # type: ignore
-            cell = cell.format(**ns) if cell is not None else None  # type: ignore
-            args = parse_argstring(self.execute, line)
 
         rest = " ".join(args.rest)
         query = f"{rest}\n{cell}".strip()
+
+        if args.jinja2:
+            query = jinja_template.apply_template(query, user_ns)
 
         if args.listtypes:
             return dbwrapper.export_functions
@@ -202,6 +203,11 @@ class DuckDbMagic(Magics, Configurable):
             connection = dbwrapper.default_connection()
 
         try:
+            if args.queryparams:
+                queryparams = [user_ns[p] for p in args.queryparams]
+            else:
+                queryparams = None
+
             if args.tables:
                 return connection.get_table_names(query)
 
@@ -210,9 +216,10 @@ class DuckDbMagic(Magics, Configurable):
                 connection=connection,
                 export_function=self.export_function,
                 explain_function=explain_function,
+                params=queryparams,
             )
             if args.output:
-                self.shell.user_ns[args.output[0]] = o  # type: ignore
+                user_ns[args.output[0]] = o
             return o
         except ConnectionException as e:
             logger.exception(

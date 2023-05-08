@@ -7,3 +7,4 @@ pyarrow
 dunamai
 pytest
 ruff
+jinja2

@@ -6,12 +6,14 @@ from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
 from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz, ast_tree
 
 
-def execute_db(query: str, con: duckdb.DuckDBPyConnection, execute: bool = False):
+def execute_db(
+    *, query: str, con: duckdb.DuckDBPyConnection, execute: bool = False, params=None
+):
     """Simple wrapper to allow alternative implementations or wrappers to be inserted
     execute = False: returns a Relation object"""
 
-    if execute:
-        return con.execute(query)
+    if execute or params is not None:
+        return con.execute(query, parameters=params)
     else:
         return con.sql(query)
 
@@ -57,23 +59,29 @@ class DuckDbMode:
         # query_tree
 
         if explain_function == "explain_analyze_tree" or explain_function == "analyze":
-            execute_db("PRAGMA enable_profiling=query_tree", connection, True)
-            r = execute_db(query_string, connection, False)
+            execute_db(
+                query="PRAGMA enable_profiling=query_tree", con=connection, execute=True
+            )
+            r = execute_db(query=query_string, con=connection, execute=False)
             t = r.explain(type="analyze")  # type: ignore
             print(t)
             return t
         elif explain_function == "explain_analyze_json":
-            execute_db("PRAGMA enable_profiling=json", connection, True)
-            r = execute_db(query_string, connection, False)
+            execute_db(
+                query="PRAGMA enable_profiling=json", con=connection, execute=True
+            )
+            r = execute_db(query=query_string, con=connection, execute=False)
             j = r.explain(type="analyze")  # type: ignore
             return j
         elif explain_function == "explain_analyze_draw":
-            execute_db("PRAGMA enable_profiling=json", connection, True)
-            r = execute_db(query_string, connection, False)
+            execute_db(
+                query="PRAGMA enable_profiling=json", con=connection, execute=True
+            )
+            r = execute_db(query=query_string, con=connection, execute=False)
             j = r.explain(type="analyze")  # type: ignore
             return draw_graphviz(j)
         elif explain_function == "explain":
-            r = execute_db(query_string, connection, False)
+            r = execute_db(query=query_string, con=connection, execute=False)
             j = r.explain()  # type: ignore
             print(j)
             return j
@@ -102,6 +110,7 @@ class DuckDbMode:
         connection: Optional[duckdb.DuckDBPyConnection] = None,
         export_function: Optional[str] = None,
         explain_function: Optional[str] = None,
+        params: Optional[List[object]] = None,
     ):
         if connection is None:
             connection = self.default_connection()
@@ -115,7 +124,7 @@ class DuckDbMode:
             )
         else:
             try:
-                r = execute_db(query_string, connection)
+                r = execute_db(query=query_string, con=connection, params=params)
             except Exception as e:
                 raise ValueError(f"Error executing {query_string} in DuckDB") from e
 

@@ -34,15 +34,3 @@ def test_explains():
             assert er.error_in_exec is None
             o = er.result
             assert o is not None
-
-
-def test_replace():
-    ipshell = create_shell()
-
-    er = ipshell.run_cell("%dql -r select '{abc}' as col1")
-    # assert isinstance(er.error_in_exec, KeyError)
-
-    ipshell.run_cell("abc = 'test'")
-    er = ipshell.run_cell("%dql -r select '{abc}'")
-    assert er.error_in_exec is None
-    assert "'test'" in er.result.columns

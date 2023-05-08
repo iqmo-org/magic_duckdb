@@ -54,9 +54,11 @@ Modes:
 
 Options:
 -l | --listtypes: Returns a list of available output types, for -t
--r: Replace {var} with variable strings from the environment using .format(). Note: not a f-string: {var} is not evaluated.
-    var1 = "table1"
-    %dql -r select * from {var1}, table2
+
+-j | --jinja2: Process the SQL as a jinja template, using the user_ns environment.
+    `%dql -j select * from {{var1}}`
+-p | --params: Pass the specified parameter(s) as a SQL parameters
+    `%dql -p obj1 select
 -o <var>: Stores the resulting output in a variable named <var>
 
 Extras:
