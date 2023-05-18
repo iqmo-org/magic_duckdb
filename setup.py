@@ -25,5 +25,5 @@ setup(
     keywords="Jupyter, Cell Magic, DuckDB, Line Magic, Magic",
     packages=find_packages(exclude=["tests"]),
     include_package_data=True,
-    install_requires=["duckdb>=0.7.1", "pandas"],
+    install_requires=["duckdb>=0.8.0", "pandas"],
 )
