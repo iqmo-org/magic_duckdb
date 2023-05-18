@@ -124,7 +124,13 @@ class DuckDbMode:
             )
         else:
             try:
-                r = execute_db(query=query_string, con=connection, params=params)
+                if export_function in ["show", "describe"]:
+                    execute = False
+                else:
+                    execute = True
+                r = execute_db(
+                    query=query_string, con=connection, params=params, execute=execute
+                )
             except Exception as e:
                 raise ValueError(f"Error executing {query_string} in DuckDB") from e
 

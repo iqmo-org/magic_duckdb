@@ -17,14 +17,14 @@ The %sql magics are great, but they do carry a lot of dependencies and incur a s
 
 ## Simplicity
 
-The goal of this project was to provide a minimal line & cell magics for DuckDB in Jupyter notebooks with minimal dependencies and as simply as possible.
+The goal of this project was to provide minimal line & cell magics for DuckDB in Jupyter notebooks with minimal dependencies and as simply as possible.
 
-The code is concentrated in two files with under 300 lines of code. Goal is to keep this code short and simple.
+The core code is concentrated in two places:
 
 - magic.py: Barebones cell and line magic that parses arguments, and executes statements
 - duckdb_mode.py: execute() calls the appropriate method based on the user selected output type.
 
-There are also separate files for drawing explain analyze graphs and formatting (beautifying) SQL.
+Features that require additional dependencies, such as Jinja2 for the --jinja2 feature, are imported dynamically.
 
 ## Quick Start
 
@@ -38,18 +38,18 @@ There are also separate files for drawing explain analyze graphs and formatting 
 
 ```
 Connection:
--cn <connection_string>: Create a new connection to a DuckDB.
+-cn <connection_string>: Create a new connection to a DuckDB. If passed without a query, this changes the global connection, otherwise used just for the current query.
     %dql -cn myfile.db
--co <connection_object>: Use an existing DuckDB Connection.
+-co <connection_object>: Use an existing DuckDB Connection. If passed without a query, this changes the global connection, otherwise used just for the current query.
     con = duckdb.connect("somefile.db")
     %dql -co con
--d: Use the duckdb.default_connection
+-d: Use the duckdb.default_connection. If passed without a query, this changes the global connection, otherwise used just for the current query.
 -g | --getcon: Get the current connection
     con = %dql --getcon
 --close: Close current connection
 
 Modes:
--t <type> [default: df]: Selects the type for this and all future requests.
+-t <type> [default: df]: Selects the type for this request. If passed without a query, this changes the global default, otherwise used just for the current query.
 -e <explain_mode>: Display the explain plan, or explain analyze, or AST
 
 Options:

@@ -37,7 +37,7 @@ def _get_obj_from_name(shell, name: str) -> Optional[object]:
 @magics_class
 class DuckDbMagic(Magics, Configurable):
     # selected via -t. None = Pandas.
-    export_function = None
+    default_export_function = None
 
     def __init__(self, shell, attr_matches: bool = True):
         Configurable.__init__(self, config=shell.config)
@@ -170,19 +170,20 @@ class DuckDbMagic(Magics, Configurable):
                     connection.close()
                 finally:
                     connection = None
+
+        thisconnection = None
         if args.default_connection:
-            connection = dbwrapper.default_connection()
+            thisconnection = dbwrapper.default_connection()
         if args.connection_object:
-            self.connect_by_objectname(args.connection_object[0])
+            thisconnection = self.connect_by_objectname(args.connection_object[0])
         if args.connection_string:
-            connection = dbwrapper.connect(args.connection_string[0])
-        if args.type:
-            if args.type[0] in dbwrapper.export_functions:
-                self.export_function = args.type[0]
-            else:
-                raise ValueError(
-                    f"{args.type[0]} not found in {dbwrapper.export_functions}"
-                )
+            thisconnection = dbwrapper.connect(args.connection_string[0])
+
+        if args.type and args.type[0] not in dbwrapper.export_functions:
+            raise ValueError(
+                f"{args.type[0]} not found in {dbwrapper.export_functions}"
+            )
+
         if args.explain:
             explain_function = args.explain[0]
             if explain_function not in dbwrapper.explain_functions:
@@ -193,14 +194,21 @@ class DuckDbMagic(Magics, Configurable):
             explain_function = None
 
         logger.debug(f"Query = {query}, {len(query)}")
-
         if query is None or len(query) == 0:
+            if args.type:
+                # print("Default format changed: {args.type[0]}")
+                self.default_export_function = args.type[0]
+            if thisconnection is not None:
+                # print(f"Default connection changed: ", "default_connection()" if args.default_connection else args.connection_object[0] if args.connection_object else args.connection_string)
+                connection = thisconnection
             logger.debug("Nothing to execute")
             return
 
-        if connection is None:
-            logger.info("Setting connection to default_connection()")
-            connection = dbwrapper.default_connection()
+        if thisconnection is None:
+            if connection is None:
+                # print("Default connection changed: default_connection()")
+                connection = dbwrapper.default_connection()
+            thisconnection = connection
 
         try:
             if args.queryparams:
@@ -209,12 +217,14 @@ class DuckDbMagic(Magics, Configurable):
                 queryparams = None
 
             if args.tables:
-                return connection.get_table_names(query)
+                return thisconnection.get_table_names(query)
 
             o = dbwrapper.execute(
                 query_string=query,
-                connection=connection,
-                export_function=self.export_function,
+                connection=thisconnection,
+                export_function=args.type[0]
+                if args.type
+                else self.default_export_function,
                 explain_function=explain_function,
                 params=queryparams,
             )

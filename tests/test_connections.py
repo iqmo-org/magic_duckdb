@@ -7,10 +7,15 @@ def test_none_inputs():
     ipshell = InteractiveShellEmbed()
     m = DuckDbMagic(shell=ipshell)
 
+    result = m.execute(line="-cn :memory:", cell=None)
+
     result = m.execute(line="-d PRAGMA version", cell=None)
     assert result is not None
 
     result = m.execute(line=None, cell="PRAGMA version")
+    assert result is not None
+
+    result = m.execute(line="", cell="PRAGMA version")
     assert result is not None
 
 
