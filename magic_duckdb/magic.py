@@ -136,7 +136,7 @@ class DuckDbMagic(Magics, Configurable):
         "-p",
         "--param",
         dest="queryparams",
-        help="Apply Jinja2 Template",
+        help="Params from user_ns",
         action="append",
     )
     @argument("rest", nargs=argparse.REMAINDER)
