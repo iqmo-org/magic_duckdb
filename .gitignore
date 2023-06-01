@@ -134,6 +134,10 @@ dmypy.json
 *.json
 *.gv
 *.gv.*
+*.png
+*.parquet
+*.csv
+
 
 /private
 keys.ini
