@@ -145,10 +145,11 @@ The jupysql/sql-alchemy/duckdb-engine %sql magic was surprisingly slow when comp
 
 ### Versions
 
-- SQLAlchemy 2.0.9
-- DuckDb: 0.7.2dev1671
-- duckdb-engine: 0.7.0
-- jupysql: 0.7.0
+> Python: 3.9.16 (main, Mar 8 2023, 10:39:24) [MSC v.1916 64 bit (AMD64)]
+> DuckDB: library_version source_id
+> 0 0.8.1-dev51 e84cc1acb8
+> Pandas : 2.0.1
+> jupysql 0.7.5
 
 ### Test Setup
 
@@ -156,13 +157,13 @@ See [benchmarking.ipynb](https://github.com/iqmo-org/magic_duckdb/blob/main/note
 
 ### Results
 
-| # Rows | duckdb (baseline) | magic_duckdb (%dql) | jupysql+SQLAlchemy (%sql) |
-| :----- | ----------------: | ------------------: | ------------------------: |
-| 10M    |            3.03 s |              2.91 s |                    50.2 s |
-| 1M     |            310 ms |              302 ms |                    5.44 s |
-| 100K   |             56 ms |               53 ms |                    844 ms |
-| 10K    |             10 ms |               10 ms |                    413 ms |
-| 1K     |             12 ms |               11 ms |                    388 ms |
-| 1      |            7.5 ms |              7.8 ms |                    363 ms |
+|     | name                      |      1 |   1000 | 1000000 | description                                         |
+| --- | ------------------------- | -----: | -----: | ------: | --------------------------------------------------- |
+| 0   | test_magicddb_pandas      |   3.47 |   4.11 |   291.0 | %dql -t df query                                    |
+| 1   | test_duckdb_execute_df    |   3.80 |   3.39 |   281.0 | con.execute(query).df()                             |
+| 2   | test_duckdb_execute_arrow |   3.91 |   4.04 |   128.0 | con.execute(query).arrow()                          |
+| 3   | test_magicddb_arrow       |   4.10 |   5.38 |   127.0 | %dql -t arrow query                                 |
+| 4   | test_duckdb_sql_df        |   6.93 |   7.94 |   318.0 | con.sql(query).df()                                 |
+| 5   | test_jupysql              | 321.00 | 256.00 |   547.0 | %config SqlMagic.autopandas = True <br/> %sql query |
 
 Copyright &copy; 2023 Iqmo Corporation
