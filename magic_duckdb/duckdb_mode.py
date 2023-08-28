@@ -124,7 +124,7 @@ class DuckDbMode:
             )
         else:
             try:
-                if export_function in ["show", "describe"]:
+                if export_function in ["show", "describe", "relation"]:
                     execute = False
                 else:
                     execute = True
