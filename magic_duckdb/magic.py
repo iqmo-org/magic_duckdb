@@ -87,8 +87,8 @@ class DuckDbMagic(Magics, Configurable):
         "-d", "--default_connection", help="Use default connection", action="store_true"
     )
     @argument("-f", "--format", help="Format (beautify) SQL input", action="store_true")
-    @argument("-ai", help="Format (beautify) SQL input", action="store_true")
-    @argument("-aichat", help="Format (beautify) SQL input", action="store_true")
+    @argument("-ai", help="OpenAI", action="store_true")
+    @argument("-aichat", help="OpenAI Chat", action="store_true")
     @argument(
         "-cn",
         "--connection_string",
