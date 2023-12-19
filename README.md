@@ -13,7 +13,7 @@ magic_duckdb was created to:
 
 ### Why not the %sql magics (jupysql or ipython-sql)?
 
-The %sql magics are great, but they do carry a lot of dependencies and incur a significant performance overhead (see Performance Comparison below). They also don't provide certain DuckDB specific features, like exporting directly to arrow(), controlling the DuckDB connections, or
+The goal of this project is to expose the native features of duckdb, with minimal dependencies, such as exporting to arrow tables or using DuckDB relation objects. 
 
 ## Simplicity
 
