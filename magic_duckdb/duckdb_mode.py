@@ -1,9 +1,10 @@
 import duckdb
 
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 import json
 from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
 from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz, ast_tree
+from IPython.display import Markdown
 
 
 def execute_db(
@@ -25,6 +26,7 @@ class DuckDbMode:
 
     export_functions: List[str] = [
         "df",
+        "df_markdown",
         "arrow",
         "pl",
         "describe",
@@ -112,7 +114,7 @@ class DuckDbMode:
         explain_function: Optional[str] = None,
         params: Optional[List[object]] = None,
         export_kwargs: Dict[str, object] = {}
-    ):
+    ) -> Tuple[object, bool]:
         if connection is None:
             connection = self.default_connection()
 
@@ -137,10 +139,14 @@ class DuckDbMode:
                 raise ValueError(f"Error executing {query_string} in DuckDB") from e
 
             if r is None or ("relation" == export_function):
-                return r
+                return r, None
             else:
-                export_function = export_function
-                f = getattr(r, export_function)
-                
-                # export_kwargs is used to pass params to .show()
-                return f(**export_kwargs)
+                if export_function == "df_markdown":
+                    md = r.df().to_markdown(index=False)
+                    return md, Markdown(md)
+                    
+                else:
+                    export_function = export_function
+                    f = getattr(r, export_function)
+                    
+                    return f(**export_kwargs), None

@@ -38,7 +38,6 @@ def _get_obj_from_name(shell, name: str) -> Optional[object]:
 class DuckDbMagic(Magics, Configurable):
     # selected via -t. None = Pandas.
     default_export_function = None
-    default_export_kwargs = {}
     
     def __init__(self, shell, attr_matches: bool = True):
         Configurable.__init__(self, config=shell.config)
@@ -180,13 +179,13 @@ class DuckDbMagic(Magics, Configurable):
                 finally:
                     connection = None
 
-        export_kwargs = self.default_export_kwargs
+        export_kwargs = {}
+        
         if args.type_param:
             for n,v in args.type_param:
                 if str(v).isdigit():
                     v=int(v)
                 export_kwargs[n] = v
-        
 
         thisconnection = None
         if args.default_connection:
@@ -197,6 +196,7 @@ class DuckDbMagic(Magics, Configurable):
             thisconnection = dbwrapper.connect(args.connection_string[0])
 
         if args.type and args.type[0] not in dbwrapper.export_functions:
+            
             raise ValueError(
                 f"{args.type[0]} not found in {dbwrapper.export_functions}"
             )
@@ -215,7 +215,6 @@ class DuckDbMagic(Magics, Configurable):
             if args.type:
                 # print("Default format changed: {args.type[0]}")
                 self.default_export_function = args.type[0]
-                self.default_export_kwargs = export_kwargs
             if thisconnection is not None:
                 # print(f"Default connection changed: ", "default_connection()" if args.default_connection else args.connection_object[0] if args.connection_object else args.connection_string)
                 connection = thisconnection
@@ -237,7 +236,7 @@ class DuckDbMagic(Magics, Configurable):
             if args.tables:
                 return thisconnection.get_table_names(query)
 
-            o = dbwrapper.execute(
+            o, display_o = dbwrapper.execute(
                 query_string=query,
                 connection=thisconnection,
                 export_function=args.type[0]
@@ -249,7 +248,12 @@ class DuckDbMagic(Magics, Configurable):
             )
             if args.output:
                 user_ns[args.output[0]] = o
-            return o
+
+            if display_o is not None:
+                return display_o
+            else:
+                return o
+
         except ConnectionException as e:
             logger.exception(
                 f"Unable to connect, connection may already be closed {e}. Setting connection to None"

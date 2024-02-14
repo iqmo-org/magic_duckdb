@@ -60,9 +60,9 @@ Options:
 -p | --params: Pass the specified parameter(s) as a SQL parameters
     `%dql -p obj1 select
 -o <var>: Stores the resulting output in a variable named <var>
--tp <name> <value>: Pass a kwarg to the type function. Intended to be used to pass parameters to .show()
-    `%dql -t show -tp max_rows 10`
-    
+-tp <name> <value>: Pass a kwarg to the type function. Intended to be used to pass parameters to .show(). Must be passed on each call, not saved. 
+    `%dql -t show -tp max_rows 10 <query>`
+
 Extras:
 --tables: Returns tables used by the query
 -f: Format the string using npx sql-formatter
@@ -76,7 +76,7 @@ See [notebooks](https://github.com/iqmo-org/magic_duckdb/tree/main/notebooks) fo
 
 ## Usage Details
 
-- `%dql -t [df | arrow | pl | relation | show] <query>`: Equivalent to - `connection.sql(query).<type>()`
+- `%dql -t [df | arrow | pl | relation | show | df_markdown] <query>`: Equivalent to - `connection.sql(query).<type>()`
 - `%dql -e [explain | explain_analyze_tree | explain_analyze_json | explain_analyze_draw | analyze | ast_json | ast_tree | ast_draw] <query>`:
   - `explain` is equivalent to `connection.sql(query).explain()`
   - `explain_analyze_*` options enable profiling (`PRAGMA enable_profiling`), and use `connection.sql(query).explain(type='analyze')`
