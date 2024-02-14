@@ -236,7 +236,7 @@ class DuckDbMagic(Magics, Configurable):
             if args.tables:
                 return thisconnection.get_table_names(query)
 
-            o, display_o = dbwrapper.execute(
+            o = dbwrapper.execute(
                 query_string=query,
                 connection=thisconnection,
                 export_function=args.type[0]
@@ -249,10 +249,8 @@ class DuckDbMagic(Magics, Configurable):
             if args.output:
                 user_ns[args.output[0]] = o
 
-            if display_o is not None:
-                return display_o
-            else:
-                return o
+            
+            return o
 
         except ConnectionException as e:
             logger.exception(

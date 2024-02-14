@@ -4,7 +4,6 @@ from typing import Optional, List, Dict, Tuple
 import json
 from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
 from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz, ast_tree
-from IPython.display import Markdown
 
 
 def execute_db(
@@ -139,14 +138,14 @@ class DuckDbMode:
                 raise ValueError(f"Error executing {query_string} in DuckDB") from e
 
             if r is None or ("relation" == export_function):
-                return r, None
+                return r
             else:
                 if export_function == "df_markdown":
                     md = r.df().to_markdown(index=False)
-                    return md, Markdown(md)
+                    return md
                     
                 else:
                     export_function = export_function
                     f = getattr(r, export_function)
                     
-                    return f(**export_kwargs), None
+                    return f(**export_kwargs)
