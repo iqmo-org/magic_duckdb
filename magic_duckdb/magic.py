@@ -38,7 +38,8 @@ def _get_obj_from_name(shell, name: str) -> Optional[object]:
 class DuckDbMagic(Magics, Configurable):
     # selected via -t. None = Pandas.
     default_export_function = None
-
+    default_export_kwargs = {}
+    
     def __init__(self, shell, attr_matches: bool = True):
         Configurable.__init__(self, config=shell.config)
         Magics.__init__(self, shell=shell)
@@ -139,6 +140,14 @@ class DuckDbMagic(Magics, Configurable):
         help="Params from user_ns",
         action="append",
     )
+    @argument(
+        "-tp",
+        "--type_param",
+        dest="type_param",
+        nargs=2,
+        help="Params to pass to the Output Type function, given as a name/value pair",
+        action="append",
+    )
     @argument("rest", nargs=argparse.REMAINDER)
     def execute(self, line: str = "", cell: str = "", local_ns=None):
         global connection
@@ -171,6 +180,14 @@ class DuckDbMagic(Magics, Configurable):
                 finally:
                     connection = None
 
+        export_kwargs = self.default_export_kwargs
+        if args.type_param:
+            for n,v in args.type_param:
+                if str(v).isdigit():
+                    v=int(v)
+                export_kwargs[n] = v
+        
+
         thisconnection = None
         if args.default_connection:
             thisconnection = dbwrapper.default_connection()
@@ -198,6 +215,7 @@ class DuckDbMagic(Magics, Configurable):
             if args.type:
                 # print("Default format changed: {args.type[0]}")
                 self.default_export_function = args.type[0]
+                self.default_export_kwargs = export_kwargs
             if thisconnection is not None:
                 # print(f"Default connection changed: ", "default_connection()" if args.default_connection else args.connection_object[0] if args.connection_object else args.connection_string)
                 connection = thisconnection
@@ -227,6 +245,7 @@ class DuckDbMagic(Magics, Configurable):
                 else self.default_export_function,
                 explain_function=explain_function,
                 params=queryparams,
+                export_kwargs=export_kwargs
             )
             if args.output:
                 user_ns[args.output[0]] = o

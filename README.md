@@ -60,7 +60,9 @@ Options:
 -p | --params: Pass the specified parameter(s) as a SQL parameters
     `%dql -p obj1 select
 -o <var>: Stores the resulting output in a variable named <var>
-
+-tp <name> <value>: Pass a kwarg to the type function. Intended to be used to pass parameters to .show()
+    `%dql -t show -tp max_rows 10`
+    
 Extras:
 --tables: Returns tables used by the query
 -f: Format the string using npx sql-formatter

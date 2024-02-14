@@ -1,6 +1,6 @@
 import duckdb
 
-from typing import Optional, List
+from typing import Optional, List, Dict
 import json
 from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
 from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz, ast_tree
@@ -111,6 +111,7 @@ class DuckDbMode:
         export_function: Optional[str] = None,
         explain_function: Optional[str] = None,
         params: Optional[List[object]] = None,
+        export_kwargs: Dict[str, object] = {}
     ):
         if connection is None:
             connection = self.default_connection()
@@ -125,6 +126,7 @@ class DuckDbMode:
         else:
             try:
                 if export_function in ["show", "describe", "relation"]:
+                    # Result must be a relation, not a connection
                     execute = False
                 else:
                     execute = True
@@ -139,4 +141,6 @@ class DuckDbMode:
             else:
                 export_function = export_function
                 f = getattr(r, export_function)
-                return f()
+                
+                # export_kwargs is used to pass params to .show()
+                return f(**export_kwargs)
