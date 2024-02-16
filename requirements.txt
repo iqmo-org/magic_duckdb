@@ -4,4 +4,4 @@ pandas>=2.1.2
 ipython>=8.0.0
 pyarrow>=12.0.0
 jinja2>=3.1.2
-openai>=0.27.9
+openai>=1.10.0
