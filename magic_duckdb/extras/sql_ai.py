@@ -3,7 +3,7 @@
 # Futures:
 # Use embeddings
 # Maintain conversation context
-import openai  # type: ignore
+from openai import OpenAI #
 import logging
 from typing import Tuple, Optional
 import textwrap
@@ -12,11 +12,25 @@ logger = logging.getLogger("magic_duckdb")
 
 OPENAI_KEY = None
 print_prompts = False
-COMPLETION_ENGINE = "text-davinci-002"
+
+__LAST_RESULT = None
+COMPLETION_ENGINE = "gpt-3.5-turbo"
 # COMPLETION_ENGINE = "gpt-4-32k-0314"
 
-CHATCOMPLETION_ENGINE = "gpt-3.5-turbo"
+#CHATCOMPLETION_ENGINE = "gpt-4-0125-preview"
 
+__OPENAI_CLIENT = None
+def get_client():
+    if OPENAI_KEY is None:
+        raise ValueError(
+            "Set the OPENAI_KEY before using. \nfrom magic_duckdb.extras import sql_ai\nsql_ai.OPENAI_KEY=yourkey"
+        )
+
+    global __OPENAI_CLIENT
+    if __OPENAI_CLIENT is None:
+        __OPENAI_CLIENT = OpenAI(api_key=OPENAI_KEY)
+
+    return __OPENAI_CLIENT
 
 def get_columns(connection) -> str:
     df = connection.sql(
@@ -74,12 +88,32 @@ def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]
 
 def call_ai(connection, chat: bool, prompt, query):
     return ai_statement(
-        connection=connection, prompt=prompt, statement=query, chat=chat
+        connection=connection, prompt=prompt, statement=query
     )
 
 
-def ai_statement(connection, prompt: str, statement: str, chat: bool = False):
-    logger.info(f"Passing {prompt} statement to AI (chat={chat}): {statement}")
+def exec_ai_prompt(prompt: str, engine = None) -> str:
+    
+    client = get_client()
+
+    completion = client.chat.completions.create(
+        model=COMPLETION_ENGINE if engine is None else engine,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+            }
+        ],
+    )
+    message = completion.choices[0].message # response["choices"][0]["message"]["content"]  # type: ignore
+
+    global __LAST_RESULT
+    __LAST_RESULT = message
+    result = message.content
+    return result
+
+def ai_statement(connection, prompt: str, statement: str):
+    logger.info(f"Passing {prompt} statement to AI ): {statement}")
     # Prepare prompt
     tables, cols, constraints = get_schema(connection)
 
@@ -94,38 +128,7 @@ def ai_statement(connection, prompt: str, statement: str, chat: bool = False):
         print("-------------Prompt---------------")
         print(full_prompt)
 
-    if OPENAI_KEY is None:
-        raise ValueError(
-            "Set the OPENAI_KEY before using. \nfrom magic_duckdb.extras import sql_ai\nsql_ai.OPENAI_KEY=yourkey"
-        )
-    else:
-        openai.api_key = OPENAI_KEY
-
-    if chat:
-        response = openai.ChatCompletion.create(
-            model=CHATCOMPLETION_ENGINE,
-            messages=[
-                {
-                    "role": "user",
-                    "content": full_prompt,
-                }
-            ],
-            max_tokens=193,
-            temperature=0,
-        )
-        result = response["choices"][0]["message"]["content"]  # type: ignore
-
-    else:
-        response = openai.Completion.create(
-            engine=COMPLETION_ENGINE,
-            prompt=full_prompt,
-            max_tokens=100,
-            n=1,
-            stop=None,
-            temperature=0.5,
-        )
-
-        result = response.choices[0].text.strip()  # type: ignore
+    result = exec_ai_prompt(full_prompt)
 
     cell = textwrap.dedent(result)
     # Insert 4 spaces of indentation before each line
