@@ -121,9 +121,9 @@ def ai_statement(connection, prompt: str, statement: str):
     context = f"I am writing SQL for a DuckDB database. My database's tables, columns and column data types are the following comma separated table: \n{cols}\n\nConstraints: {constraints}"
 
     full_prompt = context + "\nMy question is: " + prompt
-    logger.debug(f"Num tokens: {len(prompt.split(' '))}")
+    logger.debug("Num tokens: %s", len(prompt.split(' ')))
 
-    logger.info(f"Prompt = \n{full_prompt}")
+    logger.info("Prompt = \n %s", full_prompt)
     if print_prompts:
         print("-------------Prompt---------------")
         print(full_prompt)

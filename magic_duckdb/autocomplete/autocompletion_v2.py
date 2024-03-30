@@ -66,14 +66,14 @@ class DqlCustomCompleter(IPCompleter):
 
         try:
             # logger.info(event)
-            logger.debug(f"{type(event)}, {self.ipython}, {event}")
+            logger.debug("%s, %s, %s", type(event), self.ipython, event)
 
             # return self.convert_to_return(["SELECT"], event.token)
 
             if hasattr(event, "full_text"):
                 text = event.full_text
             else:
-                logger.debug(f"No full_text, nothing to do {event}")
+                logger.debug("No full_text, nothing to do %s", event)
                 return self.convert_to_return([])
 
             if not text.startswith("%dql") and not text.startswith("%%dql"):
@@ -92,7 +92,7 @@ class DqlCustomCompleter(IPCompleter):
 
             line_after = text[4:].strip()
 
-            logger.debug(f"{event}, {type(event)}")
+            logger.debug("%s: %s", event, type(event))
 
             if token is not None and token.endswith("."):
                 # VScode is ignoring or suppressing completions after a period.
@@ -102,7 +102,7 @@ class DqlCustomCompleter(IPCompleter):
 
                 # TODO: Deal with Aliases and SubQueries (xyz as abc)
                 columns = get_column_names(self.ipython, tablename)
-                logger.debug(f"Using columns {columns}")
+                logger.debug("Using columns: %s", columns)
                 return self.convert_to_return(columns, matched_fragment="")
 
             # if the last phrase should be followed by a table name, return the list of tables
@@ -110,7 +110,7 @@ class DqlCustomCompleter(IPCompleter):
                 names = get_table_names(self.ipython)
                 if len(names) == 0:
                     names = ["No Tables or DataFrames Found"]
-                logger.debug(f"Expects table name, returning {names}")
+                logger.debug("Expects table name, returning: %s", names)
 
                 return self.convert_to_return(names, matched_fragment=event.token)
 

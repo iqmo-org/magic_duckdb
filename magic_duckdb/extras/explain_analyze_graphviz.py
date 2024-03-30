@@ -33,7 +33,7 @@ def draw_graphviz(plan_json: str):
     }
 
     if dot_path is not None and os.path.exists(dot_path):
-        logger.debug(f"Using dot_path {dot_path}")
+        logger.debug("Using dot_path: %s", dot_path)
 
         # graphviz.DOT_BINARY = pathlib.Path("c:\\Program files\\graphviz\\bin\\")
         # graphviz.backend.DOT_BINARY = pathlib.Path("c:\\Program files\\graphviz\\bin\\")

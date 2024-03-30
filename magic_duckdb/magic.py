@@ -210,7 +210,7 @@ class DuckDbMagic(Magics, Configurable):
         else:
             explain_function = None
 
-        logger.debug(f"Query = {query}, {len(query)}")
+        logger.debug("Query = %s", query)
         if query is None or len(query) == 0:
             if args.type:
                 # print("Default format changed: {args.type[0]}")

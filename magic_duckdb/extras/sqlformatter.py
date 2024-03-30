@@ -13,7 +13,7 @@ denseOperators = "true"
 
 
 def formatsql(query: str):
-    logger.debug(f"Formatting {query}")
+    logger.debug("Formatting: %s", query)
     config = f'"keywordCase": "{keywordCase}", "indentStyle": "{indentStyle}", "linesBetweenQuerys": {linesBetweenQueries}, "logicalOperatorNewline": "{logicalOperatorNewline}", "denseOperators": "{denseOperators}"'
     config = "{" + config + "}"
 

@@ -34,7 +34,7 @@ def line_completer(ipython, event):
             tablename = symbol[:-1]
 
             columns = get_column_names(ipython, tablename)
-            logger.debug(f"Using columns {columns}, {type(columns)}")
+            logger.debug("Using columns %s, %s", columns, type(columns))
 
             # To complete a word, the current symbol needs to be prefixed
             # To suggest the next word, just return the next word
@@ -44,7 +44,7 @@ def line_completer(ipython, event):
 
         logger.info(event)
     except Exception:
-        logger.exception(f"Error: {event}")
+        logger.exception("Error: %s", event)
 
 
 def init_completer(ipython):

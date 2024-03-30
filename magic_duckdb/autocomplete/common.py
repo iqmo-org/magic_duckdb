@@ -118,13 +118,13 @@ def get_column_names(ipython, tablename: str) -> List[str]:
                 return []
             else:
                 names = list(columns.df().astype(str)["name"])
-                logger.debug(f"Column names {names}")
+                logger.debug("Column names: %s", names)
                 return names
         elif o is not None:
             if isinstance(o, DataFrame):
                 return list(o.columns)
             else:
-                logger.debug(f"{tablename} in namespace, but not a DataFrame {type(o)}")
+                logger.debug("%s in namespace, but not a DataFrame %s", tablename , type(o))
                 return []
         else:
             return []
