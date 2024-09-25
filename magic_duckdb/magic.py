@@ -1,5 +1,6 @@
 import logging
 import argparse
+import inspect
 from typing import Optional, Dict
 
 from traitlets.config.configurable import Configurable
@@ -131,6 +132,7 @@ class DuckDbMagic(Magics, Configurable):
     )
     @argument("--tables", help="Return table names", action="store_true")
     @argument("--close", help="Close database connection", action="store_true")
+    @argument("--no_autocontext", help="Close database connection", action="store_true")
     @argument("-j", "--jinja2", help="Apply Jinja2 Template", action="store_true")
     @argument(
         "-p",
@@ -236,6 +238,13 @@ class DuckDbMagic(Magics, Configurable):
             if args.tables:
                 return thisconnection.get_table_names(query)
 
+            # Get caller locals: preserve caller locality
+
+            if not args.no_autocontext:
+                context = inspect.currentframe().f_back.f_back.f_locals # type: ignore
+            else:
+                context = None
+
             o = dbwrapper.execute(
                 query_string=query,
                 connection=thisconnection,
@@ -244,7 +253,8 @@ class DuckDbMagic(Magics, Configurable):
                 else self.default_export_function,
                 explain_function=explain_function,
                 params=queryparams,
-                export_kwargs=export_kwargs
+                export_kwargs=export_kwargs,
+                context=context
             )
             if args.output:
                 user_ns[args.output[0]] = o

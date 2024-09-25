@@ -5,13 +5,17 @@ import json
 from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
 from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz, ast_tree
 from IPython.display import Markdown
+import inspect
 
 
 def execute_db(
-    *, query: str, con: duckdb.DuckDBPyConnection, execute: bool = False, params=None
+    *, query: str, con: duckdb.DuckDBPyConnection, execute: bool = False, params=None, context=None
 ):
     """Simple wrapper to allow alternative implementations or wrappers to be inserted
     execute = False: returns a Relation object"""
+
+    if context is not None:  # This is somewhat hackish and fragile to pass the context down to duckdb. Will be cleaner to modify duckdb to let us pass the frame locals explicitly
+        inspect.currentframe().f_locals.update(context)   # type: ignore
 
     if execute or params is not None:
         return con.execute(query, parameters=params)
@@ -113,7 +117,8 @@ class DuckDbMode:
         export_function: Optional[str] = None,
         explain_function: Optional[str] = None,
         params: Optional[List[object]] = None,
-        export_kwargs: Dict[str, object] = {}
+        export_kwargs: Optional[Dict[str, object]] = None,
+        context: Optional[Dict[str, object]] = None
     ) -> Tuple[object, bool]:
         if connection is None:
             connection = self.default_connection()
@@ -124,7 +129,7 @@ class DuckDbMode:
         if explain_function is not None:
             return self.explain_analyze(
                 query_string, connection, export_function, explain_function
-            )
+            )  # type: ignore
         else:
             try:
                 if export_function in ["show", "describe", "relation"]:
@@ -133,21 +138,23 @@ class DuckDbMode:
                 else:
                     execute = True
                 r = execute_db(
-                    query=query_string, con=connection, params=params, execute=execute
+                    query=query_string, con=connection, params=params, execute=execute, context=context
                 )
             except Exception as e:
                 raise ValueError(f"Error executing {query_string} in DuckDB") from e
 
             if r is None or ("relation" == export_function):
-                return r
+                return r  # type: ignore
             else:
                 if export_function == "df_markdown":
                     md = r.df().to_markdown(index=False)
                     mdd = Markdown(md)
-                    return mdd
+                    return mdd # type: ignore
                     
                 else:
                     export_function = export_function
                     f = getattr(r, export_function)
                     
+                    if export_kwargs is None:
+                        export_kwargs = {}
                     return f(**export_kwargs)
