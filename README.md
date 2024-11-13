@@ -74,6 +74,11 @@ Other:
 
 See [notebooks](https://github.com/iqmo-org/magic_duckdb/tree/main/notebooks) for usage examples.
 
+## Enabling Frame Scanning
+
+To reference objects that are in the Jupyter notebook local scope, enable python_scan_all_frames. This is a DuckDB feature that searches the locals of the frame stack to find dataframes and other objects.
+```%dql set python_scan_all_frames = True; ```
+
 ## Usage Details
 
 - `%dql -t [df | arrow | pl | relation | show | df_markdown] <query>`: Equivalent to - `connection.sql(query).<type>()`
