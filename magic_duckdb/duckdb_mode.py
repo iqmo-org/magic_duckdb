@@ -46,7 +46,10 @@ class DuckDbMode:
     ]
 
     def default_connection(self) -> duckdb.DuckDBPyConnection:
-        return duckdb.default_connection
+        if isinstance(duckdb.default_connection, duckdb.DuckDBPyConnection):
+            return duckdb.default_connection
+        else:
+            return duckdb.default_connection()  # https://github.com/duckdb/duckdb/pull/13442 changed from property to function
 
     def connect(self, conn_string: str) -> duckdb.DuckDBPyConnection:
         return duckdb.connect(conn_string)
