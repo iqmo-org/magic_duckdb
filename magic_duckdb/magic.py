@@ -15,15 +15,12 @@ from IPython.core.magic import (
 
 # from IPython.core.getipython import get_ipython
 from duckdb import ConnectionException, DuckDBPyConnection
-from magic_duckdb.extras import jinja_template
-from magic_duckdb.autocomplete.common import init_completers
-from magic_duckdb.duckdb_mode import DuckDbMode
-
+from .extras import jinja_template
+from .duckdb_mode import DuckDbMode
+from . import MAGIC_NAME
 
 logger = logging.getLogger("magic_duckdb")
 
-# Disable autocompletion initialization by setting this to False before loading extension
-ENABLE_AUTOCOMPLETE = True
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()
 # database connection object created via -d (default), -cn (connection string) or -co (connection object)
@@ -78,8 +75,8 @@ class DuckDbMagic(Magics, Configurable):
 
     @no_var_expand
     @needs_local_scope
-    @line_magic("dql")
-    @cell_magic("dql")
+    @line_magic(MAGIC_NAME)
+    @cell_magic(MAGIC_NAME)
     @magic_arguments()
     @argument("-l", "--listtypes", help="List the available types", action="store_true")
     @argument("-g", "--getcon", help="Return current connection", action="store_true")
@@ -258,13 +255,3 @@ class DuckDbMagic(Magics, Configurable):
             )
             connection = None
 
-
-def load_ipython_extension(ip):
-    """Load the extension in IPython."""
-    if ip is None:
-        raise ValueError("No ipython found")
-
-    if ENABLE_AUTOCOMPLETE:
-        init_completers(ip)
-
-    ip.register_magics(DuckDbMagic)
