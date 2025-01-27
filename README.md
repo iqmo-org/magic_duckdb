@@ -103,6 +103,7 @@ Using "sql" as the name may help the LSP automatically choose SQL syntax highlig
 - `%dql --format <query>` uses [sql-formatter](https://github.com/sql-formatter-org/sql-formatter). This is a javascript library, so it needs to be installed separately, although it's executed via npx so should be fine as long as you have npx / node in your path.
 - `%dql --tables <query>` returns the list of tables used by the query, equivalent to: `duckdb.get_table_names("SELECT * FROM xyz")`
 - `%dql [-ai | -aichat] fix <query>` passes the current schema to OpenAI and askes OpenAI to "fix" the query. An OpenAI developer key is required.
+- `%dql -r [readfile]` loads the query from the file path specified. Variable expansion is not supported at this time, file path must be a string.
 
 ```
             # to set openai key
