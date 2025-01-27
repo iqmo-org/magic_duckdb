@@ -1,6 +1,7 @@
 import logging
 import argparse
 from typing import Optional, Dict
+from pathlib import Path
 
 from traitlets.config.configurable import Configurable
 from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
@@ -95,6 +96,14 @@ class DuckDbMagic(Magics, Configurable):
         action="store",
     )
     @argument(
+        "-r",
+        "--readfile",
+        help="Read SQL from a file",
+        nargs=1,
+        type=str,
+        action="store",
+    )
+    @argument(
         "-co",
         "--connection_object",
         help="Connect to a database using the connection object",
@@ -154,7 +163,12 @@ class DuckDbMagic(Magics, Configurable):
         args = parse_argstring(self.execute, line)
 
         rest = " ".join(args.rest)
-        query = f"{rest}\n{cell}".strip()
+        
+        if args.readfile:
+            sql_file_path = Path(args.readfile[0])
+            query = sql_file_path.read_text()
+        else:
+            query = f"{rest}\n{cell}".strip()
 
         if args.jinja2:
             query = jinja_template.apply_template(query, user_ns)
@@ -206,6 +220,7 @@ class DuckDbMagic(Magics, Configurable):
                 )
         else:
             explain_function = None
+
 
         logger.debug("Query = %s", query)
         if query is None or len(query) == 0:
