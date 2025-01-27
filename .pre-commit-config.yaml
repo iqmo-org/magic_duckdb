@@ -2,25 +2,25 @@ default_language_version:
   python: python3
 repos:
   - repo: https://github.com/ambv/black
-    rev: 23.3.0
+    rev: 24.10.0
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.6.1
+    rev: 0.8.1
     hooks:
       - id: nbstripout
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.6
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         exclude: "packages/app/public/.*|packages/jupyter_app_base/dist/.*|packages/app/build/.*|pyrightconfig.json"
         pass_filenames: true
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.261
+    rev: v0.9.3
     hooks:
       - id: ruff
   - repo: "local"
