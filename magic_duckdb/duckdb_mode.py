@@ -129,17 +129,14 @@ class DuckDbMode:
                 query_string, connection, export_function, explain_function
             )
         else:
-            try:
-                if export_function in ["show", "describe", "relation"]:
-                    # Result must be a relation, not a connection
-                    execute = False
-                else:
-                    execute = True
-                r = execute_db(
-                    query=query_string, con=connection, params=params, execute=execute
-                )
-            except Exception as e:
-                raise ValueError(f"Error executing {query_string} in DuckDB") from e
+            if export_function in ["show", "describe", "relation"]:
+                # Result must be a relation, not a connection
+                execute = False
+            else:
+                execute = True
+            r = execute_db(
+                query=query_string, con=connection, params=params, execute=execute
+            )
 
             if r is None or ("relation" == export_function):
                 return r
