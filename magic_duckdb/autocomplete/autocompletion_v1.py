@@ -1,12 +1,12 @@
 # autocompletion for pre-iPython 8.6.0
 # the main limitation here is
+import logging
+
 from magic_duckdb.autocomplete.common import (
-    get_table_names,
     get_column_names,
+    get_table_names,
     sql_expects_tablename,
 )
-
-import logging
 
 logger = logging.getLogger("magic_duckdb")
 
