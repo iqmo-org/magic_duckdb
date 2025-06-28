@@ -1,4 +1,4 @@
-from magic_duckdb._version import __commit__, __commit_short__, __version__
+from magic_duckdb._version import __version__
 
 # This must be modified before magic is initialized, before load_ipython_extension
 MAGIC_NAME = "dql"

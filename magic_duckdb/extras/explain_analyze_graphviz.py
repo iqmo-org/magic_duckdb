@@ -1,9 +1,9 @@
+import json
+import logging
 import os
 import pathlib
 from dataclasses import dataclass
 from typing import Dict, List, Optional
-import json
-import logging
 
 logger = logging.getLogger("magic_duckdb")
 
@@ -65,7 +65,7 @@ def draw_graphviz(plan_json: str):
 
         extra_info = node_json.get("extra_info")
         if extra_info is not None:
-            node.properties["extra_info"] = extra_info.strip(" \t\r\n").replace(
+            node.properties["extra_info"] = str(extra_info).strip(" \t\r\n").replace(
                 "\n", "\\n"
             )
 
