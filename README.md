@@ -94,7 +94,7 @@ Using "sql" as the name may help the LSP automatically choose SQL syntax highlig
 
 ## Usage Details
 
-- `%dql -t [df | arrow | pl | relation | show | df_markdown] <query>`: Equivalent to - `connection.sql(query).<type>()`
+- `%dql -t [df | arrow | pl | relation | show | df_markdown] <query>`: Equivalent to - `connection.sql(query).<type>()`. df_markdown requires `tabulate` package.
 - `%dql -e [explain | explain_analyze_tree | explain_analyze_json | explain_analyze_draw | analyze | ast_json | ast_tree | ast_draw] <query>`:
   - `explain` is equivalent to `connection.sql(query).explain()`
   - `explain_analyze_*` options enable profiling (`PRAGMA enable_profiling`), and use `connection.sql(query).explain(type='analyze')`
