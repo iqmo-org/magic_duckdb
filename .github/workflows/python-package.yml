@@ -1,4 +1,4 @@
-name: Any Push>TestPyPi or Tag v*>Release+PYPI
+name: Build and Release
 
 on:
   push:
@@ -12,104 +12,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.12"]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with: # needed for tags for dunamai
           fetch-depth: 0
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Cache pip dependencies
-        uses: actions/cache@v2
+          enable-cache: true
+      - uses: actions/setup-python@v5
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements_dev.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-      - name: Install Python dependencies
-        run: |
-          pip install --upgrade pip
-          if [ -f requirements_dev.txt ]; then pip install --user -r requirements_dev.txt; fi
-      - name: Push - Bump Dev Version
-        if: github.event_name == 'push' && ! startsWith(github.event.ref, 'refs/tags/v')
-        run: |
-          export RVERSION=$(dunamai from git --bump --no-metadata)
-
-          # Experiment, if we see conflicts. Append dev0 to distinguish from a separate tag event
-          # export RDISTANCE=$(dunamai from git --bump --format {distance})
-          # if [ -z $RDISTANCE ]
-          # then
-          #   export RVERSION=$RVERSION.dev0
-          # fi
-
-          echo "RVERSION=$RVERSION" >> $GITHUB_ENV
-      - name: Tag v* - Use the tag as is, without the v
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-        run: |
-          # Debug info
-          echo ${{ github.ref }}
-          echo ${GITHUB_REF#refs/tags/v}
-          git tag
-          echo dunamai: 
-          dunamai from git --debug
-          echo dunamai latest:
-          dunamai from git --debug --latest-tag
-          #echo "RVERSION=$(dunamai from git --latest-tag)" >> $GITHUB_ENV
-          echo "RVERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-      - name: Create Version File
-        run: |
-          export VFILE=$(basename ${{ github.repository }})/_version.py
-          echo __version__=\"${{ env.RVERSION }}\" > $VFILE
-          echo __commit__=\"`git rev-parse HEAD`\" >> $VFILE
-          echo __commit_short__=\"`git rev-parse --short HEAD`\" >> $VFILE
-          cat $VFILE
+          python-version: 3.12
       - name: Install dependencies
+        run: uv sync --all-groups
+      - name: Build package
         run: |
-          pip install --user .
+          uv build
+      - name: Run tests
+        run: |
+          uv run pytest
       - name: Ruff Check
         run: |
           ruff check magic_duckdb --config pyproject.toml
-      - name: Test with pytest
-        run: |
-          pytest
-      - name: Build
-        run: |
-          pip wheel --no-deps -w dist .
-          zip wheels.zip dist/*
-      - name: Push - Publish testpypi
-        if: github.event_name == 'push' && ! startsWith(github.event.ref, 'refs/tags/v')
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
-      - name: Release Create Draft
-        id: create_release
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.PATMDG }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: true
-      - name: Release Upload Assets
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.PATMDG }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: wheels.zip
-          asset_name: wheels.zip
-          asset_content_type: application/zip
-      - name: Publish package
-        # TODO: Defer to manual release.published event
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Upload package to PyPI
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: pypa/gh-action-pypi-publish@release/v1
+        #with:
+        #    repository-url: https://test.pypi.org/legacy/

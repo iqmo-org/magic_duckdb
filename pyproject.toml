@@ -51,6 +51,7 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "pytest",
     "ipykernel",
     "pre-commit>=4.2.0",
     "openai",
