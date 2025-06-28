@@ -1,4 +1,5 @@
 from IPython.terminal.embed import InteractiveShellEmbed
+
 from magic_duckdb import duckdb_mode
 
 

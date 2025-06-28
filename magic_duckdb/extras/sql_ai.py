@@ -3,10 +3,11 @@
 # Futures:
 # Use embeddings
 # Maintain conversation context
-from openai import OpenAI #
 import logging
-from typing import Tuple, Optional
 import textwrap
+from typing import Optional, Tuple
+
+from openai import OpenAI  #
 
 logger = logging.getLogger("magic_duckdb")
 
@@ -17,9 +18,11 @@ __LAST_RESULT = None
 COMPLETION_ENGINE = "gpt-3.5-turbo"
 # COMPLETION_ENGINE = "gpt-4-32k-0314"
 
-#CHATCOMPLETION_ENGINE = "gpt-4-0125-preview"
+# CHATCOMPLETION_ENGINE = "gpt-4-0125-preview"
 
 __OPENAI_CLIENT = None
+
+
 def get_client():
     if OPENAI_KEY is None:
         raise ValueError(
@@ -31,6 +34,7 @@ def get_client():
         __OPENAI_CLIENT = OpenAI(api_key=OPENAI_KEY)
 
     return __OPENAI_CLIENT
+
 
 def get_columns(connection) -> str:
     df = connection.sql(
@@ -87,13 +91,11 @@ def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]
 
 
 def call_ai(connection, chat: bool, prompt, query):
-    return ai_statement(
-        connection=connection, prompt=prompt, statement=query
-    )
+    return ai_statement(connection=connection, prompt=prompt, statement=query)
 
 
-def exec_ai_prompt(prompt: str, engine = None) -> str:
-    
+def exec_ai_prompt(prompt: str, engine=None) -> str:
+
     client = get_client()
 
     completion = client.chat.completions.create(
@@ -105,15 +107,18 @@ def exec_ai_prompt(prompt: str, engine = None) -> str:
             }
         ],
     )
-    message = completion.choices[0].message # response["choices"][0]["message"]["content"]  # type: ignore
+    message = completion.choices[
+        0
+    ].message  # response["choices"][0]["message"]["content"]  # type: ignore
 
     global __LAST_RESULT
     __LAST_RESULT = message
     result = message.content
     return result
 
+
 def ai_statement(connection, prompt: str, statement: str):
-    logger.info(f"Passing {prompt} statement to AI ): {statement}")
+    logger.info("Passing %s statement to AI ): %s", prompt, statement)
     # Prepare prompt
     tables, cols, constraints = get_schema(connection)
 
@@ -121,12 +126,12 @@ def ai_statement(connection, prompt: str, statement: str):
     context = f"I am writing SQL for a DuckDB database. My database's tables, columns and column data types are the following comma separated table: \n{cols}\n\nConstraints: {constraints}"
 
     full_prompt = context + "\nMy question is: " + prompt
-    logger.debug("Num tokens: %s", len(prompt.split(' ')))
+    logger.debug("Num tokens: %s", len(prompt.split(" ")))
 
     logger.info("Prompt = \n %s", full_prompt)
     if print_prompts:
-        print("-------------Prompt---------------")
-        print(full_prompt)
+        print("-------------Prompt---------------")  # noqa: T201
+        print(full_prompt)  # noqa: T201
 
     result = exec_ai_prompt(full_prompt)
 
@@ -134,6 +139,6 @@ def ai_statement(connection, prompt: str, statement: str):
     # Insert 4 spaces of indentation before each line
     cell = textwrap.indent(cell, " " * 4)
 
-    print("-------------OpenAI Response---------------")
-    print(cell)
+    print("-------------OpenAI Response---------------")  # noqa: T201
+    print(cell)  # noqa: T201
     return cell

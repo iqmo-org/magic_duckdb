@@ -1,10 +1,11 @@
-import duckdb
-
-from typing import Optional, List, Dict, Tuple
 import json
-from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
-from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz, ast_tree
+from typing import Dict, List, Optional, Tuple
+
+import duckdb
 from IPython.display import Markdown
+
+from magic_duckdb.extras.ast_graphviz import ast_draw_graphviz, ast_tree
+from magic_duckdb.extras.explain_analyze_graphviz import draw_graphviz
 
 
 def execute_db(
@@ -50,7 +51,9 @@ class DuckDbMode:
         if isinstance(duckdb.default_connection, duckdb.DuckDBPyConnection):
             return duckdb.default_connection
         else:
-            return duckdb.default_connection()  # https://github.com/duckdb/duckdb/pull/13442 changed from property to function
+            return (
+                duckdb.default_connection()
+            )  # https://github.com/duckdb/duckdb/pull/13442 changed from property to function
 
     def connect(self, conn_string: str) -> duckdb.DuckDBPyConnection:
         return duckdb.connect(conn_string)
@@ -70,7 +73,7 @@ class DuckDbMode:
             )
             r = execute_db(query=query_string, con=connection, execute=False)
             t = r.explain(type="analyze")  # type: ignore
-            print(t)
+            print(t)  # noqa: T201
             return t
         elif explain_function == "explain_analyze_json":
             execute_db(
@@ -89,7 +92,7 @@ class DuckDbMode:
         elif explain_function == "explain":
             r = execute_db(query=query_string, con=connection, execute=False)
             j = r.explain()  # type: ignore
-            print(j)
+            print(j)  # noqa: T201
             return j
         elif explain_function.startswith("ast"):
             r = connection.execute(
@@ -117,8 +120,12 @@ class DuckDbMode:
         export_function: Optional[str] = None,
         explain_function: Optional[str] = None,
         params: Optional[List[object]] = None,
-        export_kwargs: Dict[str, object] = {}
-    ) -> Tuple[object, bool]:
+        export_kwargs: Dict[str, object] = None,
+    ) -> Tuple[object, bool] | Markdown:
+
+        if export_kwargs is None:
+            export_kwargs = {}
+
         if connection is None:
             connection = self.default_connection()
 
@@ -150,9 +157,9 @@ class DuckDbMode:
                     md = r.df().to_markdown(index=False)
                     mdd = Markdown(md)
                     return mdd
-                    
+
                 else:
                     export_function = export_function
                     f = getattr(r, export_function)
-                    
+
                     return f(**export_kwargs)

@@ -1,24 +1,24 @@
-import logging
 import argparse
-from typing import Optional, Dict
+import logging
 from pathlib import Path
+from typing import Dict, Optional
 
-from traitlets.config.configurable import Configurable
-from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+# from IPython.core.getipython import get_ipython
+from duckdb import ConnectionException, DuckDBPyConnection
 from IPython.core.magic import (
     Magics,
     cell_magic,
     line_magic,
     magics_class,
-    no_var_expand,
     needs_local_scope,
+    no_var_expand,
 )
+from IPython.core.magic_arguments import argument, magic_arguments, parse_argstring
+from traitlets.config.configurable import Configurable
 
-# from IPython.core.getipython import get_ipython
-from duckdb import ConnectionException, DuckDBPyConnection
-from .extras import jinja_template
-from .duckdb_mode import DuckDbMode
 from . import MAGIC_NAME
+from .duckdb_mode import DuckDbMode
+from .extras import jinja_template
 
 logger = logging.getLogger("magic_duckdb")
 
@@ -36,7 +36,7 @@ def _get_obj_from_name(shell, name: str) -> Optional[object]:
 class DuckDbMagic(Magics, Configurable):
     # selected via -t. None = Pandas.
     default_export_function = None
-    
+
     def __init__(self, shell, attr_matches: bool = True):
         Configurable.__init__(self, config=shell.config)
         Magics.__init__(self, shell=shell)
@@ -51,7 +51,7 @@ class DuckDbMagic(Magics, Configurable):
         elif con is None:
             raise ValueError(f"Couldn't find {connection_object}")
         else:
-            logger.info(f"Using existing connection: {connection_object}")
+            logger.info("Using existing connection: %s", connection_object)
             global connection
             connection = con
 
@@ -163,7 +163,7 @@ class DuckDbMagic(Magics, Configurable):
         args = parse_argstring(self.execute, line)
 
         rest = " ".join(args.rest)
-        
+
         if args.readfile:
             sql_file_path = Path(args.readfile[0])
             query = sql_file_path.read_text()
@@ -191,11 +191,11 @@ class DuckDbMagic(Magics, Configurable):
                     connection = None
 
         export_kwargs = {}
-        
+
         if args.type_param:
-            for n,v in args.type_param:
+            for n, v in args.type_param:
                 if str(v).isdigit():
-                    v=int(v)
+                    v = int(v)
                 export_kwargs[n] = v
 
         thisconnection = None
@@ -207,7 +207,7 @@ class DuckDbMagic(Magics, Configurable):
             thisconnection = dbwrapper.connect(args.connection_string[0])
 
         if args.type and args.type[0] not in dbwrapper.export_functions:
-            
+
             raise ValueError(
                 f"{args.type[0]} not found in {dbwrapper.export_functions}"
             )
@@ -220,7 +220,6 @@ class DuckDbMagic(Magics, Configurable):
                 )
         else:
             explain_function = None
-
 
         logger.debug("Query = %s", query)
         if query is None or len(query) == 0:
@@ -251,22 +250,20 @@ class DuckDbMagic(Magics, Configurable):
             o = dbwrapper.execute(
                 query_string=query,
                 connection=thisconnection,
-                export_function=args.type[0]
-                if args.type
-                else self.default_export_function,
+                export_function=(
+                    args.type[0] if args.type else self.default_export_function
+                ),
                 explain_function=explain_function,
                 params=queryparams,
-                export_kwargs=export_kwargs
+                export_kwargs=export_kwargs,
             )
             if args.output:
                 user_ns[args.output[0]] = o
 
-            
             return o
 
-        except ConnectionException as e:
+        except ConnectionException:
             logger.exception(
-                f"Unable to connect, connection may already be closed {e}. Setting connection to None"
+                "Unable to connect, connection may already be closed. Setting connection to None"
             )
             connection = None
-

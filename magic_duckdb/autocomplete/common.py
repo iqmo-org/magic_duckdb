@@ -1,8 +1,9 @@
 import logging
 from typing import List
 
-from magic_duckdb import magic
 from pandas import DataFrame
+
+from magic_duckdb import magic
 
 logger = logging.getLogger("magic_duckdb")
 
@@ -124,7 +125,9 @@ def get_column_names(ipython, tablename: str) -> List[str]:
             if isinstance(o, DataFrame):
                 return list(o.columns)
             else:
-                logger.debug("%s in namespace, but not a DataFrame %s", tablename , type(o))
+                logger.debug(
+                    "%s in namespace, but not a DataFrame %s", tablename, type(o)
+                )
                 return []
         else:
             return []

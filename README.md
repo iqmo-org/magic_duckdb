@@ -13,7 +13,7 @@ magic_duckdb was created to:
 
 ### Why not the %sql magics (jupysql or ipython-sql)?
 
-The goal of this project is to expose the native features of duckdb, with minimal dependencies, such as exporting to arrow tables or using DuckDB relation objects. 
+The goal of this project is to expose the native features of duckdb, with minimal dependencies, such as exporting to arrow tables or using DuckDB relation objects.
 
 ## Simplicity
 
@@ -60,7 +60,7 @@ Options:
 -p | --params: Pass the specified parameter(s) as a SQL parameters
     `%dql -p obj1 select
 -o <var>: Stores the resulting output in a variable named <var>
--tp <name> <value>: Pass a kwarg to the type function. Intended to be used to pass parameters to .show(). Must be passed on each call, not saved. 
+-tp <name> <value>: Pass a kwarg to the type function. Intended to be used to pass parameters to .show(). Must be passed on each call, not saved.
     `%dql -t show -tp max_rows 10 <query>`
 
 Extras:
@@ -77,12 +77,12 @@ See [notebooks](https://github.com/iqmo-org/magic_duckdb/tree/main/notebooks) fo
 ## Enabling Frame Scanning
 
 To reference objects that are in the Jupyter notebook local scope, enable python_scan_all_frames. This is a DuckDB feature that searches the locals of the frame stack to find dataframes and other objects.
-```%dql set python_scan_all_frames = True; ```
-
+`%dql set python_scan_all_frames = True; `
 
 ## Modifying the MAGIC NAME from DQL to SQL
 
-To use %sql and %%sql instead of the default dql, do the following (before loading the extension): 
+To use %sql and %%sql instead of the default dql, do the following (before loading the extension):
+
 ```py
 import magic_duckdb
 magic_duckdb.MAGIC_NAME = "sql"
@@ -90,11 +90,11 @@ magic_duckdb.MAGIC_NAME = "sql"
 %load_ext magic_duckdb
 ```
 
-Using "sql" as the name may help the LSP automatically choose SQL syntax highlighting. 
+Using "sql" as the name may help the LSP automatically choose SQL syntax highlighting.
 
 ## Usage Details
 
-- `%dql -t [df | arrow | pl | relation | show | df_markdown] <query>`: Equivalent to - `connection.sql(query).<type>()`
+- `%dql -t [df | arrow | pl | relation | show | df_markdown] <query>`: Equivalent to - `connection.sql(query).<type>()`. df_markdown requires `tabulate` package.
 - `%dql -e [explain | explain_analyze_tree | explain_analyze_json | explain_analyze_draw | analyze | ast_json | ast_tree | ast_draw] <query>`:
   - `explain` is equivalent to `connection.sql(query).explain()`
   - `explain_analyze_*` options enable profiling (`PRAGMA enable_profiling`), and use `connection.sql(query).explain(type='analyze')`
@@ -160,10 +160,6 @@ To silence a cell, you can stack %%capture:
 <query>
 ```
 
-# Performance Comparison
-
-The jupysql/sql-alchemy/duckdb-engine %sql magic was surprisingly slow when compared to magic_duckdb or duckdb. I didn't spend a lot of time evaluating this, so please do your own evaluation: my priority was keeping magic_duckdb simple by using duckdb directly.
-
 ### Versions
 
 > Python: 3.9.16 (main, Mar 8 2023, 10:39:24) [MSC v.1916 64 bit (AMD64)]
@@ -187,4 +183,4 @@ See [benchmarking.ipynb](https://github.com/iqmo-org/magic_duckdb/blob/main/note
 | 4   | test_duckdb_sql_df        |   6.93 |   7.94 |   318.0 | con.sql(query).df()                                 |
 | 5   | test_jupysql              | 321.00 | 256.00 |   547.0 | %config SqlMagic.autopandas = True <br/> %sql query |
 
-Copyright &copy; 2023 Iqmo Corporation
+Copyright &copy; 2025 Iqmo Corporation
