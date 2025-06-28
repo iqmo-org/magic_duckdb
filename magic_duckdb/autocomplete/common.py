@@ -141,13 +141,7 @@ def init_completers(ip):
         from magic_duckdb.autocomplete.autocompletion_v2 import init_completer
 
         init_completer(ipython=ip)
-    except Exception:
+    except Exception as e:
         logger.debug(
-            "Unable to initialize autocompletion_v2. iPython 8.6.0+ is required. Trying v1 completer"
+            "Unable to initialize autocompletion_v2. iPython 8.6.0+ is required for autocomplete. %s", e
         )
-        try:
-            from magic_duckdb.autocomplete.autocompletion_v2 import init_completer
-
-            init_completer(ipython=ip)
-        except Exception:
-            logger.debug("Unable to initialize autocompletion_v1")
