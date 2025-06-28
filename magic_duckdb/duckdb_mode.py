@@ -27,6 +27,7 @@ class DuckDbMode:
     export_functions: List[str] = [
         "df",
         "df_markdown",
+        "markdown",
         "arrow",
         "pl",
         "describe",
@@ -139,12 +140,13 @@ class DuckDbMode:
                     query=query_string, con=connection, params=params, execute=execute
                 )
             except Exception as e:
-                raise ValueError(f"Error executing {query_string} in DuckDB") from e
+                e.add_note(f"While executing {query_string=}")
+                raise
 
             if r is None or ("relation" == export_function):
                 return r
             else:
-                if export_function == "df_markdown":
+                if export_function == "df_markdown" or export_function == "markdown":
                     md = r.df().to_markdown(index=False)
                     mdd = Markdown(md)
                     return mdd
