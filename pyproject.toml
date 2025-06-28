@@ -1,3 +1,21 @@
+[project]
+name = "magic_duckdb"
+requires-python = "~=3.11"
+authors = [{ name = "Paul T", email = "paul@iqmo.com" }]
+maintainers = [{ name = "Paul T", email = "paul@iqmo.com" }]
+license = "BSD-3-Clause"
+dynamic = ["version"]
+dependencies = [
+    "duckdb>=1.2.0",
+    "pandas>=2.1.2",
+    "ipython>=8.0.0",
+    "pyarrow>=12.0.0",
+    "jinja2>=3.1.2",
+]
+
+[project.optional-dependencies]
+ai = ["openai>=1.10.0"]
+
 [tool.ruff]
 exclude = [
     ".git",
@@ -7,15 +25,56 @@ exclude = [
     "versioneer.py",
     "docs/source/conf.py"]
 ignore = [
-    #E203, 
-    #"W503", 
-    #"W293", 
-    #"W291",
     "E501" ]
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "S", "B", "G", "N", "I001", "T", "PD", "C90"]
+ignore = [
+    "W291",
+    "E501",
+    "S608",
+    "C901", 
+    "PD901"]
 
 [tool.ruff.per-file-ignores]
     "__init__.py" = ["F401"]
+    "tests/**/*" = ["S101", "T201", "T100"]
+
+[tool.uv]
+package = false
 
 [tool.pyright]
     # nothing
     exclude = ["tests"]
+
+
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.2.0",
+    "openai",
+    "ruff",
+    "tabulate",
+    "polars"
+]
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.hatch.build.hooks.version]
+path = "magic_duckdb/_version.py"
+template = '''
+__version__ = "{version}"
+'''
+
+[tool.hatch.build.targets.sdist]
+include = ["magic_duckdb"]
+
+[tool.hatch.build.targets.wheel]
+include = ["magic_duckdb"]
+
+[tool.hatch.build.targets.wheel.sources]
+"./magic_duckdb" = "magic_duckdb"
