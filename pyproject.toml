@@ -1,6 +1,6 @@
 [project]
 name = "magic_duckdb"
-requires-python = "~=3.11"
+requires-python = ">=3.11"
 authors = [{ name = "Paul T", email = "paul@iqmo.com" }]
 maintainers = [{ name = "Paul T", email = "paul@iqmo.com" }]
 license = "BSD-3-Clause"
