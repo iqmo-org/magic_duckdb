@@ -17,14 +17,20 @@ The goal of this project is to expose the native features of duckdb, with minima
 
 ## Simplicity
 
-The goal of this project was to provide minimal line & cell magics for DuckDB in Jupyter notebooks with minimal dependencies and as simply as possible.
+Goal: Minimal line & cell magics that directly expose DuckDB features with few dependencies, low overhead, and low complexity. 
 
 The core code is concentrated in two places:
 
 - magic.py: Barebones cell and line magic that parses arguments, and executes statements
 - duckdb_mode.py: execute() calls the appropriate method based on the user selected output type.
 
-Features that require additional dependencies, such as Jinja2 for the --jinja2 feature, are imported dynamically.
+Optional features include:
+- jinja2 templating
+- graphviz query diagrams
+- sql formatting using npx & [sql-formatter](https://www.npmjs.com/package/sql-formatter)
+- markdown exporting, using [tabulate](https://pypi.org/project/tabulate/)
+- openai conversations
+
 
 ## Quick Start
 
@@ -111,7 +117,9 @@ Using "sql" as the name may help the LSP automatically choose SQL syntax highlig
             sql_ai.OPENAI_KEY = openai_key
 ```
 
-## Autocompletion: Work in Progress
+## Autocompletion
+
+Note: Jupyter autocompletion is very much a Work-In-Progress
 
 There are two different Autocompletion implementations, one for MatcherAPIv2 and the other (pre-ipython 8.6.0) for MatcherAPIv1. The MatcherAPIv2 version is tried first, and if it fails, the MatcherAPIv1 version is loaded. MatcherAPIv1 will not match the entire results of a cell: it's limited to a line by line match.
 
@@ -159,28 +167,5 @@ To silence a cell, you can stack %%capture:
 %%iql -o bqldf
 <query>
 ```
-
-### Versions
-
-> Python: 3.9.16 (main, Mar 8 2023, 10:39:24) [MSC v.1916 64 bit (AMD64)]
-> DuckDB: library_version source_id
-> 0 0.8.1-dev51 e84cc1acb8
-> Pandas : 2.0.1
-> jupysql 0.7.5
-
-### Test Setup
-
-See [benchmarking.ipynb](https://github.com/iqmo-org/magic_duckdb/blob/main/notebooks/benchmarking.ipynb) for the test code.
-
-### Results
-
-|     | name                      |      1 |   1000 | 1000000 | description                                         |
-| --- | ------------------------- | -----: | -----: | ------: | --------------------------------------------------- |
-| 0   | test_magicddb_pandas      |   3.47 |   4.11 |   291.0 | %dql -t df query                                    |
-| 1   | test_duckdb_execute_df    |   3.80 |   3.39 |   281.0 | con.execute(query).df()                             |
-| 2   | test_duckdb_execute_arrow |   3.91 |   4.04 |   128.0 | con.execute(query).arrow()                          |
-| 3   | test_magicddb_arrow       |   4.10 |   5.38 |   127.0 | %dql -t arrow query                                 |
-| 4   | test_duckdb_sql_df        |   6.93 |   7.94 |   318.0 | con.sql(query).df()                                 |
-| 5   | test_jupysql              | 321.00 | 256.00 |   547.0 | %config SqlMagic.autopandas = True <br/> %sql query |
 
 Copyright &copy; 2025 Iqmo Corporation
