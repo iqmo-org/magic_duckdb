@@ -3,25 +3,24 @@
 # An important change is being able to complete against the entire cell text
 # for a cell magic. In v1 (pre 8.6.0), could only complete against the current line.
 
+import logging
 import re
-from typing import List, Optional
-from IPython.core.completer import IPCompleter
+
+from IPython.core.completer import (
+    CompletionContext,
+    IPCompleter,
+    SimpleCompletion,
+    SimpleMatcherResult,
+    context_matcher,
+)
 
 from magic_duckdb.autocomplete.common import (
-    get_table_names,
     get_column_names,
+    get_table_names,
     pragma_phrases,
-    sql_phrases,
     sql_expects_tablename,
+    sql_phrases,
 )
-from IPython.core.completer import (
-    SimpleMatcherResult,
-    SimpleCompletion,
-    context_matcher,
-    CompletionContext,
-)
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class DqlCustomCompleter(IPCompleter):
     expects_table_pat = re.compile(r"(?si).*from")
 
     def convert_to_return(
-        self, completions: List[str], matched_fragment: Optional[str] = None
+        self, completions: list[str], matched_fragment: str
     ) -> SimpleMatcherResult:
         simple_completions = [
             SimpleCompletion(text=t, type="duckdb") for t in completions
@@ -74,10 +73,10 @@ class DqlCustomCompleter(IPCompleter):
                 text = event.full_text
             else:
                 logger.debug("No full_text, nothing to do %s", event)
-                return self.convert_to_return([])
+                return self.convert_to_return([], "")
 
             if not text.startswith("%dql") and not text.startswith("%%dql"):
-                return self.convert_to_return([])
+                return self.convert_to_return([], "")
 
             # if hasattr(event, "command"):
             #    command = event.command
@@ -119,8 +118,8 @@ class DqlCustomCompleter(IPCompleter):
             return self.convert_to_return(allp, event.token)
 
         except Exception:
-            logger.exception(f"Error completing {event}")
-            return self.convert_to_return([])
+            logger.exception("Error completing %s", event)
+            return self.convert_to_return([], "")
 
 
 def init_completer(ipython):

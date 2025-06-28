@@ -20,3 +20,8 @@ def load_ipython_extension(ip):
     from .magic import DuckDbMagic  # type: ignore
 
     ip.register_magics(DuckDbMagic)
+
+
+__all__ = [
+    "__version__",
+]

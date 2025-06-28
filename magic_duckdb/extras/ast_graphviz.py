@@ -1,6 +1,6 @@
-from dataclasses import dataclass
-from typing import Dict, List, Tuple, Optional
 import logging
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 # An experiment at showing the AST using SQLParse.
 
@@ -52,7 +52,8 @@ def get_tree(ast_json) -> Tuple[List[Node], List[Tuple[Node, Node]]]:
                 return
 
         if use_parent:
-            assert parent is not None
+            if parent is None:
+                raise ValueError("Unexpected None parent")
             node = parent
         else:
             node = get_node(name, parent)
