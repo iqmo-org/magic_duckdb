@@ -38,8 +38,10 @@ jobs:
       - name: Build package
         run: |
           uv build
-      - name: Install Graphviz
-        run: sudo apt-get update && sudo apt-get install -y graphviz
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: graphviz
+          version: 1.0
       - name: Run tests
         run: |
           uv run pytest --verbose --cov=. --cov-report=term-missing
