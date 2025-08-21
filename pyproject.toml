@@ -24,7 +24,7 @@ dev = [
 [project]
 name = "magic_duckdb"
 description = "DuckDB Cell (%%dql) and Line (%dql) Magics for Jupyter and VSCode"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [{name = "Paul T", email = "paul@iqmo.com"}]
 maintainers = [{name = "Paul T", email = "paul@iqmo.com"}]
 license = "BSD-3-Clause"
