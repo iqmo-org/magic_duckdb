@@ -1,21 +1,16 @@
-from IPython.terminal.embed import InteractiveShellEmbed
-
+from IPython.terminal.embed import InteractiveShellEmbed  # noqa # type: ignore
 from magic_duckdb import duckdb_mode
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def create_shell() -> object:
-    ipshell = InteractiveShellEmbed()
-    ipshell.run_cell("%load_ext magic_duckdb")
-    return ipshell
-
-
-def test_types():
+def test_types(ipshell: InteractiveShellEmbed):
     # Not expected to occur, but should gracefully handle
-    ipshell = create_shell()
 
     execution_result = ipshell.run_cell("%dql --listtypes")
     o = execution_result.result
-    print(o)
+    logger.info(o)
     assert "df" in o
     for otype in o:
         execution_result2 = ipshell.run_cell(f"%dql -t {otype} PRAGMA version")
@@ -25,9 +20,8 @@ def test_types():
         assert otype == "show" or outobj is not None
 
 
-def test_explains():
+def test_explains(ipshell: InteractiveShellEmbed):
     # Not expected to occur, but should gracefully handle
-    ipshell = create_shell()
 
     for e in duckdb_mode.DuckDbMode.explain_functions:
         if "draw" not in e:

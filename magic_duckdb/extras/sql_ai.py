@@ -90,12 +90,11 @@ def get_schema(connection) -> Tuple[Optional[str], Optional[str], Optional[str]]
         return None, None, None
 
 
-def call_ai(connection, chat: bool, prompt, query):
+def call_ai(connection, chat: bool, prompt: str, query: str):
     return ai_statement(connection=connection, prompt=prompt, statement=query)
 
 
-def exec_ai_prompt(prompt: str, engine=None) -> str:
-
+def exec_ai_prompt(prompt: str, engine=None) -> str | None:
     client = get_client()
 
     completion = client.chat.completions.create(
@@ -113,7 +112,7 @@ def exec_ai_prompt(prompt: str, engine=None) -> str:
 
     global __LAST_RESULT
     __LAST_RESULT = message
-    result = message.content
+    result: str | None = message.content
     return result
 
 
@@ -135,7 +134,7 @@ def ai_statement(connection, prompt: str, statement: str):
 
     result = exec_ai_prompt(full_prompt)
 
-    cell = textwrap.dedent(result)
+    cell = textwrap.dedent(result) if result is not None else ""
     # Insert 4 spaces of indentation before each line
     cell = textwrap.indent(cell, " " * 4)
 

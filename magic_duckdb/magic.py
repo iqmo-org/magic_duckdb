@@ -24,8 +24,6 @@ logger = logging.getLogger("magic_duckdb")
 
 # dbwrapper: To override database logic, replace or monkeypatch this object
 dbwrapper: DuckDbMode = DuckDbMode()
-# database connection object created via -d (default), -cn (connection string) or -co (connection object)
-connection: Optional[DuckDBPyConnection] = None
 
 
 def _get_obj_from_name(shell, name: str) -> Optional[object]:
@@ -36,6 +34,8 @@ def _get_obj_from_name(shell, name: str) -> Optional[object]:
 class DuckDbMagic(Magics, Configurable):
     # selected via -t. None = Pandas.
     default_export_function = None
+    # database connection object created via -d (default), -cn (connection string) or -co (connection object)
+    connection: Optional[DuckDBPyConnection] = None
 
     def __init__(self, shell, attr_matches: bool = True):
         Configurable.__init__(self, config=shell.config)
@@ -52,10 +52,10 @@ class DuckDbMagic(Magics, Configurable):
             raise ValueError(f"Couldn't find {connection_object}")
         else:
             logger.info("Using existing connection: %s", connection_object)
-            global connection
-            connection = con
 
-    def format_wrapper(self, query):
+            self.connection = con
+
+    def format_wrapper(self, query: str):
         try:
             from magic_duckdb.extras.sqlformatter import formatsql
 
@@ -64,11 +64,11 @@ class DuckDbMagic(Magics, Configurable):
             logger.exception("Error processing")
             raise e
 
-    def ai_wrapper(self, chat: bool, prompt, query):
+    def ai_wrapper(self, chat: bool, prompt: str, query: str):
         try:
             from magic_duckdb.extras import sql_ai
 
-            sql_ai.call_ai(connection, chat, prompt, query)
+            sql_ai.call_ai(self.connection, chat, prompt, query)
             return None  # suppress for now, need to figure out formatting
         except Exception as e:
             logger.exception("Error with AI")
@@ -155,7 +155,6 @@ class DuckDbMagic(Magics, Configurable):
     )
     @argument("rest", nargs=argparse.REMAINDER)
     def execute(self, line: str = "", cell: str = "", local_ns=None):
-        global connection
         cell = "" if cell is None else cell
         line = "" if line is None else line
         user_ns: Dict[str, object] = self.shell.user_ns  # type: ignore
@@ -176,7 +175,7 @@ class DuckDbMagic(Magics, Configurable):
         if args.listtypes:
             return dbwrapper.export_functions
         elif args.getcon:
-            return connection
+            return self.connection
         elif args.format:
             return self.format_wrapper(query)
         elif args.ai:
@@ -184,11 +183,11 @@ class DuckDbMagic(Magics, Configurable):
         elif args.aichat:
             return self.ai_wrapper(False, rest, query)
         elif args.close:
-            if connection is not None:
+            if self.connection is not None:
                 try:
-                    connection.close()
+                    self.connection.close()
                 finally:
-                    connection = None
+                    self.connection = None
 
         export_kwargs = {}
 
@@ -207,7 +206,6 @@ class DuckDbMagic(Magics, Configurable):
             thisconnection = dbwrapper.connect(args.connection_string[0])
 
         if args.type and args.type[0] not in dbwrapper.export_functions:
-
             raise ValueError(
                 f"{args.type[0]} not found in {dbwrapper.export_functions}"
             )
@@ -228,15 +226,15 @@ class DuckDbMagic(Magics, Configurable):
                 self.default_export_function = args.type[0]
             if thisconnection is not None:
                 # print(f"Default connection changed: ", "default_connection()" if args.default_connection else args.connection_object[0] if args.connection_object else args.connection_string)
-                connection = thisconnection
+                self.connection = thisconnection
             logger.debug("Nothing to execute")
             return
 
         if thisconnection is None:
-            if connection is None:
+            if self.connection is None:
                 # print("Default connection changed: default_connection()")
-                connection = dbwrapper.default_connection()
-            thisconnection = connection
+                self.connection = dbwrapper.default_connection()
+            thisconnection = self.connection
 
         try:
             if args.queryparams:
@@ -245,7 +243,7 @@ class DuckDbMagic(Magics, Configurable):
                 queryparams = None
 
             if args.tables:
-                return thisconnection.get_table_names(query)
+                return thisconnection.get_table_names(query)  # type: ignore
 
             o = dbwrapper.execute(
                 query_string=query,
@@ -266,4 +264,4 @@ class DuckDbMagic(Magics, Configurable):
             logger.exception(
                 "Unable to connect, connection may already be closed. Setting connection to None"
             )
-            connection = None
+            self.connection = None

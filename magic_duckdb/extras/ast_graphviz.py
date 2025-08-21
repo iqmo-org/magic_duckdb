@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # An experiment at showing the AST using SQLParse.
 
@@ -20,8 +20,8 @@ basic_types = (int, float, str, bool, complex)
 class Node:
     id: int
     name: str
-    parent: "Node"
-    properties: Dict
+    parent: Optional["Node"]
+    properties: Dict[str, Any]
     children: List["Node"]
 
     def props_str(self):
@@ -32,7 +32,7 @@ def get_tree(ast_json) -> Tuple[List[Node], List[Tuple[Node, Node]]]:
     nodes: List[Node] = []
     edges: List[Tuple[Node, Node]] = []
 
-    def get_node(name, parent):
+    def get_node(name: str, parent: Optional[Node]):
         id = len(nodes)
         node = Node(id=id, name=name, parent=parent, properties={}, children=[])
         nodes.append(node)
@@ -42,7 +42,7 @@ def get_tree(ast_json) -> Tuple[List[Node], List[Tuple[Node, Node]]]:
             edges.append((parent, node))
         return node
 
-    def process_node(name, o, parent: Optional[Node], use_parent: bool = False):
+    def process_node(name: str, o, parent: Optional[Node], use_parent: bool = False):
         if SUPPRESS_EMPTY:
             if o is None:
                 return
@@ -84,7 +84,7 @@ def get_tree(ast_json) -> Tuple[List[Node], List[Tuple[Node, Node]]]:
     return nodes, edges
 
 
-def _print_node(n: Node, depth, lines):
+def _print_node(n: Node, depth: int, lines: List[str]):
     indent = "-" * depth
 
     lines.append(f"{indent} | {n.name}: {n.props_str()}")

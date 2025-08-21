@@ -1,9 +1,13 @@
+# ruff: noqa: S106, N806
+
+from types import SimpleNamespace
+
 import duckdb
-from pandas import DataFrame
 import numpy as np
+from pandas import DataFrame
+
 from magic_duckdb import magic
 from magic_duckdb.autocomplete.autocompletion_v2 import DqlCustomCompleter
-from types import SimpleNamespace
 
 
 def test_simple_autocomplete():
