@@ -9,7 +9,7 @@ ENABLE_AUTOCOMPLETE = True
 
 def load_ipython_extension(ip):
     """Load the extension in IPython."""
-    if ip is None:
+    if ip is None:  # pragma: no cover
         raise ValueError("No ipython found")
 
     if ENABLE_AUTOCOMPLETE:

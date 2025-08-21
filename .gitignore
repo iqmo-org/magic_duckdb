@@ -143,3 +143,6 @@ keys.ini
 
 *.code-workspace
 *user_id.txt
+
+
+*.duckdb

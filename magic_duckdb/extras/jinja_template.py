@@ -1,4 +1,7 @@
-def apply_template(sql: str, user_ns) -> str:
+from typing import Any
+
+
+def apply_template(sql: str, user_ns: dict[str, Any]) -> str:
     try:
         from jinja2 import Template
     except Exception as e:

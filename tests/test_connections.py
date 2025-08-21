@@ -1,10 +1,10 @@
+from IPython.terminal.embed import InteractiveShellEmbed  # noqa #type: ignore
+
 from magic_duckdb.magic import DuckDbMagic
-from IPython.terminal.embed import InteractiveShellEmbed
 
 
-def test_none_inputs():
+def test_none_inputs(ipshell: InteractiveShellEmbed):
     # Not expected to occur, but should gracefully handle
-    ipshell = InteractiveShellEmbed()
     m = DuckDbMagic(shell=ipshell)
 
     result = m.execute(line="-cn :memory:", cell=None)
@@ -19,9 +19,8 @@ def test_none_inputs():
     assert result is not None
 
 
-def test_cn_file():
+def test_cn_file(ipshell: InteractiveShellEmbed):
     # Not expected to occur, but should gracefully handle
-    ipshell = InteractiveShellEmbed()
     m = DuckDbMagic(shell=ipshell)
 
     filename = "test.db"
@@ -33,13 +32,13 @@ def test_cn_file():
     assert df.at[0, "file"].endswith(filename)
 
 
-def test_co_file():
+def test_co_file(ipshell: InteractiveShellEmbed, tmp_path):
     # Not expected to occur, but should gracefully handle
-    ipshell = InteractiveShellEmbed()
     m = DuckDbMagic(shell=ipshell)
 
     fname = "test.db"
-    ipshell.user_ns["filename"] = fname
+    fpath = tmp_path / fname
+    ipshell.user_ns["filename"] = fpath
 
     ipshell.run_cell("import duckdb")
     ipshell.run_cell("fcon = duckdb.connect(filename)")
@@ -56,15 +55,16 @@ def test_co_file():
     assert df2.at[0, "file"].endswith(fname)
 
 
-def test_close():
-    ipshell = InteractiveShellEmbed()
+def test_close(ipshell: InteractiveShellEmbed, tmp_path):
     m = DuckDbMagic(shell=ipshell)
 
     # No exception here
     m.execute(line="--close")
 
     fname = "test.db"
-    m.execute(line=f"-cn {fname}")
+    fpath = tmp_path / fname
+
+    m.execute(line=f"-cn {fpath}")
     df = m.execute(line="PRAGMA database_list")
 
     assert len(df) == 1

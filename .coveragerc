@@ -1,0 +1,25 @@
+[run]
+source = magic_duckdb
+relative_files = true
+branch = True
+parallel = True
+concurrency = multiprocessing
+omit = 
+    tests/*
+    magic_duckdb/extras/sql_ai.py
+
+[html]
+show_contexts = True
+
+[report]
+exclude_also =
+    def __repr__
+    if self.debug:
+    if settings.DEBUG
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    class .*\bProtocol\):
+    @(abc\.)?abstractmethod
