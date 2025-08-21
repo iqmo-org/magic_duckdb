@@ -9,6 +9,9 @@ on:
     branches:
       - main
 
+env:
+  LATEST_PY_VERSION: &latest '3.13'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -54,7 +57,7 @@ jobs:
         run: |
           uv run ruff check magic_duckdb --config pyproject.toml
       - name: Upload package to PyPI
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && matrix.python-version == env.LATEST_PY_VERSION
         uses: pypa/gh-action-pypi-publish@release/v1
         #with:
         #    repository-url: https://test.pypi.org/legacy/
