@@ -17,7 +17,8 @@ dev = [
   "pytest-asyncio>=1.1.0",
   "pytest-cov>=6.2.1",
   "pylint>=3.3.8",
-  "nbclient>=0.10.2"
+  "nbclient>=0.10.2",
+  "pyarrow>=21.0.0",
 ]
 
 [project]
