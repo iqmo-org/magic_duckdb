@@ -43,9 +43,6 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 
-[project.optional-dependencies]
-ai = ["openai>=1.10.0"]
-
 [project.urls]
 Homepage = "https://github.com/iqmo-org/magic_duckdb"
 Repository = "https://github.com/iqmo-org/magic_duckdb"
