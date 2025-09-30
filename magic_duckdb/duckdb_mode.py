@@ -30,6 +30,7 @@ class DuckDbMode:
         "df_markdown",
         "markdown",
         "arrow",
+        "fetch_arrow_table",
         "pl",
         "describe",
         "show",
@@ -51,9 +52,7 @@ class DuckDbMode:
         if isinstance(duckdb.default_connection, duckdb.DuckDBPyConnection):
             return duckdb.default_connection
         else:
-            return (
-                duckdb.default_connection()
-            )  # https://github.com/duckdb/duckdb/pull/13442 changed from property to function
+            return duckdb.default_connection()  # https://github.com/duckdb/duckdb/pull/13442 changed from property to function
 
     def connect(self, conn_string: str) -> duckdb.DuckDBPyConnection:
         return duckdb.connect(conn_string)
@@ -122,7 +121,6 @@ class DuckDbMode:
         params: Optional[List[object]] = None,
         export_kwargs: Dict[str, object] = None,
     ) -> Tuple[object, bool] | Markdown:
-
         if export_kwargs is None:
             export_kwargs = {}
 
@@ -153,7 +151,9 @@ class DuckDbMode:
             if r is None or ("relation" == export_function):
                 return r
             else:
-                if export_function == "df_markdown" or export_function == "markdown":
+                if export_function == "arrow" and hasattr(r, "fetch_arrow_table"):
+                    return r.fetch_arrow_table()
+                elif export_function == "df_markdown" or export_function == "markdown":
                     md = r.df().to_markdown(index=False)
                     mdd = Markdown(md)
                     return mdd
