@@ -19,18 +19,18 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.10", "3.13"]
+        python-version: ["3.10", "3.14"]
     permissions:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: # needed for tags for dunamai
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
-          #allow-prereleases: true
+          allow-prereleases: true
       - name: Install uv
         uses: astral-sh/setup-uv@v6
         with:
