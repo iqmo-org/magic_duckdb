@@ -9,6 +9,8 @@ on:
     branches:
       - main
 
+contents: read
+
 env:
   LATEST_PY_VERSION: &latest '3.13'
 
@@ -19,7 +21,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.10", "3.14"]
+        python-version: ["3.10", "3.13"]
     permissions:
       id-token: write
       contents: read
