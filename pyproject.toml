@@ -215,9 +215,8 @@ ignore = [
   "E501",
   "S608",
   "C901",
-  "PD901"
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101"]
-"**/*.ipynb" = ["S101", "T201", "F821"]
+"**/*.ipynb" = ["S101", "T201", "F821", "S106"]
