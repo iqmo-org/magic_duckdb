@@ -3,8 +3,6 @@ from typing import List
 
 from pandas import DataFrame
 
-from magic_duckdb import magic
-
 logger = logging.getLogger("magic_duckdb")
 
 sql_expects_tablename = [
@@ -63,6 +61,8 @@ sql_phrases = [
     "CREATE OR REPLACE TABLE",
     "CREATE TABLE IF NOT EXISTS",
     "CREATE VIEW",
+    "DESCRIBE",
+    "SUMMARIZE",
 ]
 
 pragma_phrases = [
@@ -93,8 +93,12 @@ def get_table_names(ipython) -> List[str]:
     try:
         user_keys = [k for k, v in ipython.user_ns.items() if isinstance(v, DataFrame)]
 
-        if magic.connection is not None:
-            tables = magic.connection.sql("show tables")
+        # retrieve by class name
+        magic_instance = ipython.magics_manager.registry.get("DuckDbMagic")
+        connection = magic_instance.connection if magic_instance else None
+
+        if connection is not None:
+            tables = connection.sql("show tables")
             if tables is None:
                 return user_keys
             else:
@@ -112,8 +116,13 @@ def get_column_names(ipython, tablename: str) -> List[str]:
         # check if an object
         # o = ipython.ev(tablename)
         o = ipython.user_ns.get(tablename)
-        if o is None and magic.connection is not None:
-            columns = magic.connection.sql(f"pragma table_info('{tablename}')")
+
+        # retrieve by class name
+        magic_instance = ipython.magics_manager.registry.get("DuckDbMagic")
+        connection = magic_instance.connection if magic_instance else None
+
+        if o is None and connection is not None:
+            columns = connection.sql(f"pragma table_info('{tablename}')")
             if columns is None:
                 logger.debug("None columns")
                 return []
@@ -143,5 +152,6 @@ def init_completers(ip):
         init_completer(ipython=ip)
     except Exception as e:
         logger.debug(
-            "Unable to initialize autocompletion_v2. iPython 8.6.0+ is required for autocomplete. %s", e
+            "Unable to initialize autocompletion_v2. iPython 8.6.0+ is required for autocomplete. %s",
+            e,
         )

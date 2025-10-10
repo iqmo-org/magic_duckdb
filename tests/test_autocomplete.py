@@ -6,11 +6,10 @@ import duckdb
 import numpy as np
 from pandas import DataFrame
 
-from magic_duckdb import magic
 from magic_duckdb.autocomplete.autocompletion_v2 import DqlCustomCompleter
 
 
-def test_simple_autocomplete():
+def test_simple_autocomplete(ipshell):
     with duckdb.connect() as con:
         con.execute(
             "CREATE TABLE IF NOT EXISTS my_new_table as select 'abc' as my_first_column, 'def' as my_second_column"
@@ -39,10 +38,12 @@ def test_simple_autocomplete():
         con.execute("show tables").df()
 
         # test autocompletion
-        magic.connection = con
-        fake_ipython_shell = SimpleNamespace(user_ns=locals())
+        magic_instance = ipshell.magics_manager.registry["DuckDbMagic"]
+        magic_instance.connection = con
 
-        completer = DqlCustomCompleter(shell=fake_ipython_shell)
+        ipshell.user_ns.update(locals())
+
+        completer = DqlCustomCompleter(shell=ipshell)
 
         # completer finds the table names
         event = SimpleNamespace(full_text="%dql s", token="s")
