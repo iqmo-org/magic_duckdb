@@ -10,7 +10,7 @@ on:
       - main
 
 permissions:
-  content: read
+  contents: read
   
 env:
   LATEST_PY_VERSION: &latest '3.14'
