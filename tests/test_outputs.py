@@ -1,3 +1,4 @@
+import sys
 from unittest.mock import patch
 
 import pytest
@@ -65,6 +66,7 @@ def test_connect_by_objectname_invalid_type(ipshell: InteractiveShellEmbed):
         m.connect_by_objectname("not_a_connection")
 
 
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="add_note requires Python 3.11+")
 def test_connection_exception(ipshell: InteractiveShellEmbed):
     m = DuckDbMagic(shell=ipshell)
     m.execute(line="-d")
@@ -103,6 +105,7 @@ def test_duckdb_mode_defaults():
     assert result.iat[0, 0] == 42
 
 
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="add_note requires Python 3.11+")
 def test_duckdb_mode_execute_exception():
     mode = DuckDbMode()
     with pytest.raises(Exception) as exc_info:
