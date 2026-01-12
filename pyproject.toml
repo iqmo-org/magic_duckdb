@@ -3,15 +3,18 @@ requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
+ai = [
+    "openai>=2.15.0",
+]
 dev = [
-  "duckdb",
-  "pytest",
+  "duckdb>=1.0.0",
   "ipykernel",
   "openai",
   "ruff",
   "tabulate",
   "polars",
-  "graphviz",
+  "graphviz>=0.21",
+  "pytest>=9.0.2",
   "pre-commit-uv>=4.1.4",
   "pytest-randomly>=3.16.0",
   "pytest-xdist>=3.8.0",
@@ -20,6 +23,9 @@ dev = [
   "pylint>=3.3.8",
   "nbclient>=0.10.2",
   "pyarrow>=21.0.0",
+]
+viz = [
+    "graphviz>=0.21",
 ]
 
 [project]
