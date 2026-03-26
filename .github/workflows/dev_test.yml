@@ -1,0 +1,58 @@
+name: Testing on Nightly
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  
+env:
+  LATEST_PY_VERSION: &latest '3.14'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: testing
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.10", "3.14"]
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with: # needed for tags for dunamai
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync
+      - name: Build package
+        run: |
+          uv build
+      - name: Install Latest duckdb
+        run: |
+          uv pip install duckdb --upgrade --pre
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: graphviz
+          version: 1.0
+      - name: Run tests
+        run: |
+          uv run --no-sync pytest --verbose --cov=. --cov-report=term-missing
+      # - name: Python Coverage Comment if main
+      #   if: ${{ github.ref == 'refs/heads/main' && matrix.python-version == env.LATEST_PY_VERSION && matrix.os == 'ubuntu-latest' }}
+      #   uses: py-cov-action/python-coverage-comment-action@v3.23
+      #   with:
+      #     GITHUB_TOKEN: ${{ github.token }}
+      - name: Ruff Check
+        run: |
+          uv run --no-sync ruff check magic_duckdb --config pyproject.toml
